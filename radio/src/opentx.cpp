@@ -791,10 +791,10 @@ void checkThrottleStick()
   if (isThrottleWarningAlertNeeded()) {
     LED_ERROR_BEGIN();
     AUDIO_ERROR_MESSAGE(AU_THROTTLE_ALERT);
-    auto dialog = new FullScreenDialog(WARNING_TYPE_ALERT, TR_THROTTLE_UPPERCASE, STR_THROTTLE_NOT_IDLE, STR_PRESS_ANY_KEY_TO_SKIP);
-    dialog->setCloseCondition([]() {
-        return !isThrottleWarningAlertNeeded();
-    });
+    auto dialog =
+        new FullScreenDialog(WARNING_TYPE_ALERT, TR_THROTTLE_UPPERCASE,
+                             STR_THROTTLE_NOT_IDLE, STR_PRESS_ANY_KEY_TO_SKIP);
+    dialog->setCloseCondition([]() { return !isThrottleWarningAlertNeeded(); });
     dialog->runForever();
     LED_ERROR_END();
   }
