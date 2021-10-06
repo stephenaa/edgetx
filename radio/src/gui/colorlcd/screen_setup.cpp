@@ -352,9 +352,26 @@ ScreenUserInterfacePage::ScreenUserInterfacePage(ScreenMenu* menu):
 }
 
 
+class MyFormGridLayout : public FormGridLayout
+{
+  public:
+    MyFormGridLayout(int width, int top) :
+      FormGridLayout(width, top)
+    {
+    }
+
+    rect_t getFieldSlotEx(uint8_t count = 1, uint8_t index = 0, uint8_t number = 1) const
+    {
+      coord_t width = (this->width - labelWidth - lineMarginRight - (count - 1) * PAGE_LINE_SPACING) / count;
+      coord_t left = labelWidth + (width + PAGE_LINE_SPACING) * index;
+      return {left, currentY, width *number, PAGE_LINE_HEIGHT};
+    }
+};
+
+
 void ScreenUserInterfacePage::build(FormWindow * window)
 {
-  FormGridLayout grid(LCD_W, 10);
+  MyFormGridLayout grid(LCD_W, 10);
 
   // Top Bar
   new StaticText(window, grid.getLabelSlot(), STR_TOP_BAR, 0, COLOR_THEME_PRIMARY1);
@@ -374,7 +391,7 @@ void ScreenUserInterfacePage::build(FormWindow * window)
   auto tp = ThemePersistance::instance();
   tp->refresh();
   std::vector<std::string> names = tp->getNames();
-  new ChoiceEx(window, grid.getFieldSlot(3, 0, 2), names, 0, names.size() - 1,
+  new Choice(window, grid.getFieldSlotEx(3, 0, 2), names, 0, names.size() - 1,
     [=] () {
       return tp->getThemeIndex();
     }, 
