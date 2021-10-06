@@ -23,6 +23,7 @@
 #include <list>
 #include <string>
 #include <locale>
+#include <algorithm>
 #include "sdcard.h"
 #include "colors.h"
 #include "str_functions.h"
@@ -30,12 +31,20 @@
 class ThemePersistance;
 extern ThemePersistance themePersistance;
 
+#define COLOR_COUNT 12
+
 struct ColorEntry
 {
     LcdColorIndex colorNumber;
     uint32_t colorValue;
+
+    bool operator== (const ColorEntry &a) { return this->colorNumber == a.colorNumber; }
 };
 
+
+#define AUTHOR_LENGTH 50
+#define INFO_LENGTH 255
+#define NAME_LENGTH 50
 class ThemeFile
 {
  public:
@@ -43,18 +52,31 @@ class ThemeFile
       path(themePath)
     {
         if (themePath.size()) {
-            scanFile();
+            deSerialize();
         }
     }
 
+    void serialize();
+
     std::string getPath() { return path; }
-    std::string getName() { return name; }
-    std::string getAuthor() { return author; }
-    std::string getInfo() { return info; }
+    char *getName() { return name; }
+    char *getAuthor() { return author; }
+    char *getInfo() { return info; }
+
+    uint32_t getColorByName(std::string colorName) {
+
+        auto colorIndex = findColorIndex(colorName.c_str());
+        ColorEntry a = {colorIndex, 0};
+        auto colorEntry = std::find(colorList.begin(), colorList.end(), a);
+        if (colorEntry != colorList.end())
+            return colorEntry->colorValue;
+        
+        return 0;
+    }
     
-    void setName(std::string name) { this->name = name; }
-    void setAuthor(std::string author) { this->author = author; }
-    void setInfo(std::string info) { this->info = info; }
+    void setName(std::string name) { strcpy(this->name, name.c_str()); }
+    void setAuthor(std::string author) { strcpy(this->author, author.c_str()); }
+    void setInfo(std::string info) { strcpy(this->info, info.c_str()); }
 
     std::vector<ColorEntry> getColorList() { return colorList; }
     void setColor(LcdColorIndex colorIndex, uint32_t color);
@@ -65,9 +87,9 @@ class ThemeFile
   protected:
     FIL file;
     std::string path;
-    std::string name;
-    std::string author;
-    std::string info;
+    char name[NAME_LENGTH];
+    char author[AUTHOR_LENGTH];
+    char info[INFO_LENGTH];
     std::vector<ColorEntry> colorList;
 
 
@@ -78,7 +100,7 @@ class ThemeFile
         colors
     };
 
-    void scanFile();
+    void deSerialize();
     bool convertRGB(char *pColorRGB, uint32_t &color);
     LcdColorIndex findColorIndex(const char *name);
     bool readNextLine(char * line, int maxlen);
@@ -99,6 +121,8 @@ class ThemePersistance
     void loadDefaultTheme();
     void setDefaultTheme(int index);
     void deleteDefaultTheme();
+    char **getColorNames();
+
 
     std::vector<std::string> getNames()
     {

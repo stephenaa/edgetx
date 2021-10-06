@@ -22,8 +22,7 @@
 
 ThemePersistance themePersistance;
 
-#define COLOR_COUNT 12
-static const char *conversionArray[COLOR_COUNT] = {
+static const char *colorNames[COLOR_COUNT] = {
     "DEFAULT",    "PRIMARY1",   "PRIMARY2",   "PRIMARY3",
     "SECONDARY1", "SECONDARY2", "SECONDARY3", "FOCUS",
     "EDIT",       "ACTIVE",     "WARNING",    "DISABLED",
@@ -48,7 +47,37 @@ std::string ThemeFile::getThemeImageFileName()
   return "";
 }
 
-void ThemeFile::scanFile()
+void ThemeFile::serialize()
+{
+  char fullPath[FF_MAX_LFN + 1];
+  strncpy(fullPath, THEMES_PATH "/", FF_MAX_LFN);
+  strncat(fullPath, path.c_str(), FF_MAX_LFN);
+
+  FRESULT result = f_open(&file, fullPath, FA_CREATE_ALWAYS | FA_WRITE);
+  if (result == FR_OK) {
+    f_printf(&file, "---\n");
+    f_printf(&file, "summary:\n");
+    f_printf(&file, "  name: %s\n", name);
+    f_printf(&file, "  author: %s\n", author);
+    f_printf(&file, "  info: %s\n", info);
+    f_printf(&file, "\n");
+    f_printf(&file, "colors:\n");
+
+    for (auto colorEntry : colorList) {
+      auto r = GET_RED(colorEntry.colorValue);
+      auto g = GET_GREEN(colorEntry.colorValue);
+      auto b = GET_BLUE(colorEntry.colorValue);
+
+      std::string colorName(colorNames[colorEntry.colorNumber]);
+      colorName += ":";
+
+      f_printf(&file, "  %-11s 0x%02X%02X%02X\n", colorName.c_str(), r,g,b);
+    }
+    f_close(&file);
+  }
+}
+
+void ThemeFile::deSerialize()
 {
   char line[256 + 1];
   char fullPath[FF_MAX_LFN + 1];
@@ -113,11 +142,11 @@ void ThemeFile::scanFile()
 
         case summary: {
           if (strcmp(plvalue, "name") == 0)
-            name = prvalue;
+            strncpy(name, prvalue, NAME_LENGTH);
           else if (strcmp(plvalue, "author") == 0)
-            author = prvalue;
+            strncpy(author, prvalue, AUTHOR_LENGTH);
           else if (strcmp(plvalue, "info") == 0)
-            info = prvalue;
+            strncpy(info, prvalue, INFO_LENGTH);
         } break;
       }
     }
@@ -184,7 +213,7 @@ LcdColorIndex ThemeFile::findColorIndex(const char *name)
 {
   int i;
   for (i = 0; i < COLOR_COUNT; i++) {
-    if (strcmp(name, conversionArray[i]) == 0) break;
+    if (strcmp(name, colorNames[i]) == 0) break;
   }
 
   if (i >= COLOR_COUNT) return DEFAULT_COLOR_INDEX;
@@ -214,7 +243,11 @@ bool ThemeFile::readNextLine(char *line, int maxlen)
 void ThemeFile::setColor(LcdColorIndex colorIndex, uint32_t color)
 {
   if (colorIndex >= DEFAULT_COLOR_INDEX && colorIndex < LCD_COLOR_COUNT) {
-    colorList.emplace_back(ColorEntry {colorIndex, color});
+    auto colorEntry = std::find(colorList.begin(), colorList.end(), ColorEntry { colorIndex, 0});
+    if (colorEntry != colorList.end())
+      colorEntry->colorValue = color;
+    else
+      colorList.emplace_back(ColorEntry {colorIndex, color});
   }
 }
 
@@ -294,6 +327,11 @@ void ThemePersistance::loadDefaultTheme()
     }
   }
   f_close(&file);
+}
+
+char ** ThemePersistance::getColorNames()
+{
+  return (char **) colorNames;
 }
 
 void ThemePersistance::deleteDefaultTheme()
