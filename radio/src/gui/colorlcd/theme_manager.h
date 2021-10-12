@@ -63,6 +63,17 @@ class ThemeFile
     char *getAuthor() { return author; }
     char *getInfo() { return info; }
 
+    ColorEntry *getColorEntryByIndex(LcdColorIndex colorNumber) {
+        int n = 0;
+        for (auto colorEntry : colorList) {
+            if (colorEntry.colorNumber == colorNumber)
+                return &colorList[n];
+            n++;
+        }
+
+        return nullptr;
+    }
+
     uint32_t getColorByName(std::string colorName) {
 
         auto colorIndex = findColorIndex(colorName.c_str());
@@ -144,6 +155,7 @@ class ThemePersistance
     inline void setThemeIndex(int index) { currentTheme = index;}
 
     inline ThemeFile* getCurrentTheme() { return themes[currentTheme]; }
+    inline ThemeFile* getThemeByIndex(int index) { return themes[index]; }
 
     void refresh()
     {

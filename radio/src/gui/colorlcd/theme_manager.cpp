@@ -29,7 +29,7 @@ static const char *colorNames[COLOR_COUNT] = {
 };
 
 constexpr const char *RGBSTRING = "RGB(";
-
+#define HEX_COLOR_VALUE_LEN 8
 
 constexpr const char* SELECTED_THEME_FILE = THEMES_PATH "/selectedtheme.txt";
 
@@ -156,8 +156,6 @@ void ThemeFile::deSerialize()
 
   f_close(&file);
 }
-
-#define HEX_COLOR_VALUE_LEN 8
 
 bool ThemeFile::convertRGB(char *pColorRGB, uint32_t &color)
 {
@@ -360,26 +358,26 @@ class DefaultEdgeTxTheme : public ThemeFile
       setName("EdgeTX Default");
       setAuthor("EdgeTX Team");
       setInfo("Default EdgeTX Color Scheme");
+    
+      // initializze the default color table
+      colorList.emplace_back(ColorEntry { DEFAULT_COLOR_INDEX, RGB(18, 94, 153) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_PRIMARY1_INDEX, RGB(0, 0, 0) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_PRIMARY2_INDEX, RGB(255, 255, 255) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_PRIMARY3_INDEX, RGB(12, 63, 102) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_SECONDARY1_INDEX, RGB(18, 94, 153) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_SECONDARY2_INDEX, RGB(182, 224, 242) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_SECONDARY3_INDEX, RGB(228, 238, 242) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_FOCUS_INDEX, RGB(20, 161, 229) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_EDIT_INDEX, RGB(0, 153, 9) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_ACTIVE_INDEX, RGB(255, 222, 0) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_WARNING_INDEX, RGB(224, 0, 0) });
+      colorList.emplace_back(ColorEntry { COLOR_THEME_DISABLED_INDEX, RGB(140, 140, 140) });
+      colorList.emplace_back(ColorEntry { CUSTOM_COLOR_INDEX, RGB(170, 85, 0) });
     }
 
     void applyTheme() override
     {
-      lcdColorTable[DEFAULT_COLOR_INDEX] = RGB(18, 94, 153);
-
-      lcdColorTable[COLOR_THEME_PRIMARY1_INDEX] = RGB(0, 0, 0);
-      lcdColorTable[COLOR_THEME_PRIMARY2_INDEX] = RGB(255, 255, 255);
-      lcdColorTable[COLOR_THEME_PRIMARY3_INDEX] = RGB(12, 63, 102);
-      lcdColorTable[COLOR_THEME_SECONDARY1_INDEX] = RGB(18, 94, 153);
-      lcdColorTable[COLOR_THEME_SECONDARY2_INDEX] = RGB(182, 224, 242);
-      lcdColorTable[COLOR_THEME_SECONDARY3_INDEX] = RGB(228, 238, 242);
-      lcdColorTable[COLOR_THEME_FOCUS_INDEX] = RGB(20, 161, 229);
-      lcdColorTable[COLOR_THEME_EDIT_INDEX] = RGB(0, 153, 9);
-      lcdColorTable[COLOR_THEME_ACTIVE_INDEX] = RGB(255, 222, 0);
-      lcdColorTable[COLOR_THEME_WARNING_INDEX] = RGB(224, 0, 0);
-      lcdColorTable[COLOR_THEME_DISABLED_INDEX] = RGB(140, 140, 140);
-      lcdColorTable[CUSTOM_COLOR_INDEX] = RGB(170, 85, 0);
-      
-      OpenTxTheme::instance()->update(false);
+      ThemeFile::applyTheme();
     }
 
     std::string getThemeImageFileName() override

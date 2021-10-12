@@ -25,4 +25,9 @@ class ThemeSetupPage: public PageTab {
     ThemeSetupPage();
 
     void build(FormWindow * window) override;
+
+  protected:
+    Window *colorEditor = nullptr;
+    Window *previewWindow = nullptr;
+    int currentTheme = 0;
 };
