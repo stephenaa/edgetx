@@ -25,7 +25,7 @@ ThemePersistance themePersistance;
 static const char *colorNames[COLOR_COUNT] = {
     "DEFAULT",    "PRIMARY1",   "PRIMARY2",   "PRIMARY3",
     "SECONDARY1", "SECONDARY2", "SECONDARY3", "FOCUS",
-    "EDIT",       "ACTIVE",     "WARNING",    "DISABLED",
+    "EDIT",       "ACTIVE",     "WARNING",    "DISABLED", "CUSTOM",
 };
 
 constexpr const char *RGBSTRING = "RGB(";

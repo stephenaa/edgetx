@@ -31,7 +31,7 @@
 class ThemePersistance;
 extern ThemePersistance themePersistance;
 
-#define COLOR_COUNT 12
+#define COLOR_COUNT 13
 
 struct ColorEntry
 {

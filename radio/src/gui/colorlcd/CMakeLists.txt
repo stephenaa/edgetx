@@ -20,6 +20,8 @@ set(GUI_SRC
   bitmaps.cpp
   theme.cpp
   theme_manager.cpp
+  color_editor.cpp
+  listbox.cpp
   tabsgroup.cpp
   page.cpp
   fab_button.cpp
