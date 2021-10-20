@@ -25,8 +25,9 @@
 class FilePreview : public Window
 {
   public:
-    FilePreview(Window *parent, const rect_t &rect) :
-            Window(parent, rect, NO_SCROLLBAR)
+    FilePreview(Window *parent, const rect_t &rect, bool drawCentered = true) :
+            Window(parent, rect, NO_SCROLLBAR),
+            _drawCentered(drawCentered)
     {
     }
 
@@ -51,17 +52,18 @@ class FilePreview : public Window
 
     void paint(BitmapBuffer *dc) override
     {
-      dc->setFormat(BMP_RGB565);
-      coord_t y = parent->getScrollPositionY() + 2;
-      coord_t h = MENU_BODY_HEIGHT - 4;
+      coord_t y = _drawCentered ? parent->getScrollPositionY() + 2 : 2;
+      coord_t h = _drawCentered ? MENU_BODY_HEIGHT - 4 : rect.h;
       if (bitmap) {
         coord_t bitmapHeight = min<coord_t>(h, bitmap->height());
         coord_t bitmapWidth = min<coord_t>(width(), bitmap->width());
-        dc->drawScaledBitmap(bitmap, (width() - bitmapWidth) / 2, y + (h - bitmapHeight) / 2, bitmapWidth,
-                             bitmapHeight);
+        dc->drawScaledBitmap(bitmap, (width() - bitmapWidth) / 2, 
+                             _drawCentered ? y + (h - bitmapHeight) / 2 : 0, 
+                             bitmapWidth, bitmapHeight);
       }
     }
 
   protected:
     BitmapBuffer *bitmap = nullptr;
+    bool _drawCentered = true;
 };

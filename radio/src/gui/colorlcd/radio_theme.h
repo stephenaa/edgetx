@@ -19,6 +19,40 @@
  * GNU General Public License for more details.
  */
 #include "tabsgroup.h"
+#include "color_editor.h"
+#include "file_preview.h"
+
+class ThemeColorPreview: public Window
+{
+  public:
+    ThemeColorPreview(Window *parent, const rect_t &rect, std::vector<ColorEntry> colorList) :
+      Window(parent, rect),
+      colorList(colorList)
+    {
+    }
+
+    void setColorList(std::vector<ColorEntry> colorList)
+    {
+      this->colorList.assign(colorList.begin(), colorList.end());
+      invalidate();
+    }
+
+    void paint(BitmapBuffer *dc) override
+    {
+      int totalNecessaryWidth = colorList.size() * (boxWidth + 2);
+      int x = (rect.w - totalNecessaryWidth) / 2;
+      for (auto color: colorList) {
+        dc->drawSolidFilledRect(x, 0, boxWidth, boxWidth, COLOR2FLAGS(color.colorValue));
+        dc->drawSolidRect(x, 0, boxWidth, boxWidth, 1, COLOR2FLAGS(BLACK));
+        x += boxWidth + 2;
+      }
+    }
+
+  protected:
+    std::vector<ColorEntry> colorList;
+    int boxWidth = 18;
+};
+
 
 class ThemeSetupPage: public PageTab {
   public:
@@ -27,7 +61,12 @@ class ThemeSetupPage: public PageTab {
     void build(FormWindow * window) override;
 
   protected:
-    Window *colorEditor = nullptr;
     Window *previewWindow = nullptr;
+    FilePreview *filePreview = nullptr;
+    ColorEditor *colorEditor = nullptr;
+    ThemeColorPreview *themeColorPreview = nullptr;
+    ListBox *listBox = nullptr;
+    StaticText *authorText = nullptr;
+    StaticText *nameText = nullptr;
     int currentTheme = 0;
 };

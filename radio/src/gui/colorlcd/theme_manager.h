@@ -55,6 +55,14 @@ class ThemeFile
             deSerialize();
         }
     }
+    ThemeFile(const ThemeFile &theme)
+    {
+        path = theme.path;
+        strncpy(name, theme.name, NAME_LENGTH);
+        strncpy(author, theme.author, AUTHOR_LENGTH);
+        strncpy(info, theme.info, INFO_LENGTH);
+        colorList.assign(theme.colorList.begin(), theme.colorList.end());
+    }
 
     void serialize();
 

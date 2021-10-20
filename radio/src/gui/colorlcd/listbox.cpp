@@ -9,7 +9,7 @@ extern inline tmr10ms_t getTicks()
 
 ListBase::ListBase(Window *parent, const rect_t &rect, std::vector<std::string> names,
           std::function<uint32_t()> getValue,
-          std::function<void(uint32_t)> setValue, 
+          std::function<void(uint32_t)> setValue,
           uint8_t lineHeight,
           WindowFlags windowFlags, LcdFlags lcdFlags) :
   FormField(parent, rect, windowFlags),
@@ -122,62 +122,53 @@ void ListBase::paint(BitmapBuffer *dc)
 bool ListBase::isLongPress()
 {
   unsigned int curTimer = getTicks();
-  return (!longPressed && duration10ms != 0 && curTimer - duration10ms > LONG_PRESS_10MS);
+  return (slidingWindow == nullptr && duration10ms != 0 && curTimer - duration10ms > LONG_PRESS_10MS);
 }
 
 
 void ListBase::checkEvents(void)
 {
-  event_t event = getEvent();
+  Window::checkEvents();
 
   if (isLongPress()) {
-    if (!longPressed && longPressHandler) {
-      longPressHandler(event);
+    if (longPressHandler) {
+      setSelected(yDown / lineHeight);
+      longPressHandler(0);
       killAllEvents();
       duration10ms = 0;
-      longPressed = true;
       return;
     }
-  }
-  
-  if (event) {
-    if (hasFocus())
-      onEvent(event);
-    else
-      pushEvent(event);
   }
 }
 
 bool ListBase::onTouchStart(coord_t x, coord_t y)
 {
-  if (!longPressed && duration10ms == 0) {
+  if (duration10ms == 0) {
     duration10ms = getTicks();
   }
+
+  yDown = y;
 
   return FormField::onTouchStart(x, y);
 }
 
-  bool ListBase::onTouchEnd(coord_t x, coord_t y)
-  {
-    if (!isEnabled()) return false;
+bool ListBase::onTouchEnd(coord_t x, coord_t y)
+{
+  if (!isEnabled()) return false;
 
-    if (longPressed) {
-      longPressed = false;
-      return false;
-    }
+  auto selected = y / lineHeight;
+  setSelected(selected);
 
-    duration10ms = 0;
+  duration10ms = 0;
 
-    if (!hasFocus()) {
-      setFocus(SET_FOCUS_DEFAULT);
-    }
-
-    if (!isEditMode()) setEditMode(true);
-
-    auto selected = y / lineHeight;
-    setSelected(selected);
-    return true;
+  if (!hasFocus()) {
+    setFocus(SET_FOCUS_DEFAULT);
   }
+
+  if (!isEditMode()) setEditMode(true);
+
+  return true;
+}
 #endif
 
 

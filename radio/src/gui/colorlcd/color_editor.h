@@ -12,7 +12,7 @@ class ColorEditorContent : public ModalWindowContent
 {
   friend class ColorEditorPopup;
   public:
-    ColorEditorContent(ModalWindow *window, const rect_t rect, uint32_t color);
+    ColorEditorContent(ModalWindow *window, const rect_t rect, uint32_t color, std::function<void (uint32_t rgb)> setValue = nullptr);
 
 #if defined(DEBUG_WINDOWS)
     std::string getName() const override
@@ -45,6 +45,8 @@ class ColorEditorContent : public ModalWindowContent
     void drawTop(BitmapBuffer *dc);
     void drawGrid(BitmapBuffer *dc);
     void drawColor(BitmapBuffer *dc);
+    void setRGB();
+    std::function<void (uint32_t rgb)> setValue;
 };
 
 // a color editor popup
@@ -77,8 +79,9 @@ class ColorEditorPopup : public ModalWindow
 class ColorSquare : public FormField
 {
   public:
-    ColorSquare(Window *window, const rect_t &rect, std::function<void (ColorEntry value)> setValue)
-      : FormField(window, rect)
+    ColorSquare(Window *window, const rect_t &rect, std::function<void (ColorEntry value)> setValue = nullptr)
+      : FormField(window, rect),
+      setValue(setValue)
     {
     }
 
@@ -109,18 +112,37 @@ class ColorSquare : public FormField
   void onEvent(event_t event) override
   {
     if (event == EVT_KEY_BREAK(KEY_ENTER)) {
-      new ColorEditorPopup(this, [=] () { return RGB( r, g, b ); });
-    } else 
+      new ColorEditorPopup(this, 
+        [=] () { 
+          return RGB( r, g, b ); 
+        }, 
+        [=] (uint32_t rgb) {
+          r = GET_RED(rgb);
+          g = GET_GREEN(rgb);
+          b = GET_BLUE(rgb);
+          colorEntry.colorValue = rgb;
+          setValue(colorEntry);
+        });
+    } else {
       FormField::onEvent(event);
-
-
+    }
   }
 #endif
 
 #if defined(HARDWARE_TOUCH)
     bool onTouchStart(coord_t x, coord_t y) override
     {
-      new ColorEditorPopup(this, [=] () { return RGB( r, g, b ); });
+      new ColorEditorPopup(this, 
+        [=] () { 
+          return RGB( r, g, b ); 
+        }, 
+        [=] (uint32_t rgb) {
+          r = GET_RED(rgb);
+          g = GET_GREEN(rgb);
+          b = GET_BLUE(rgb);
+          colorEntry.colorValue = rgb;
+          setValue(colorEntry);
+        });
       return true;
     }
 #endif
@@ -130,6 +152,7 @@ class ColorSquare : public FormField
     uint32_t r = 0;
     uint32_t g = 0;
     uint32_t b = 0;
+    std::function<void (ColorEntry colorEntry)> setValue;
 };
 
 // a box that allows editing rgb, or pressing the color box to launch
@@ -167,6 +190,9 @@ class ColorList : public ListBase
     return colorList[selected];
   }
 
+
+  bool onTouchEnd(coord_t x, coord_t y) override;
+
   std::vector<std::string> getColorListNames(std::vector<ColorEntry> colors);
 
   inline void setColorList(std::vector<ColorEntry> colorList)
@@ -181,6 +207,7 @@ class ColorList : public ListBase
  protected:
   std::vector<ColorEntry> colorList;
   ThemePersistance *tp;
+  void createColorEditorPopup();
 };
 
 // ColorEditor: the main control that orchristrates between ColorList and ColorEntryEditor

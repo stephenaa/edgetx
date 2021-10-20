@@ -79,8 +79,9 @@ void RGBtoHSV(uint8_t R, uint8_t G, uint8_t B, float& fH, float& fS, float& fV)
   }
 }
 
-ColorEditorContent::ColorEditorContent(ModalWindow *window, const rect_t rect, uint32_t color) :
-  ModalWindowContent(window, rect)
+ColorEditorContent::ColorEditorContent(ModalWindow *window, const rect_t rect, uint32_t color, std::function<void (uint32_t rgb)> setValue) :
+  ModalWindowContent(window, rect),
+  setValue(std::move(setValue))
 {
   r = GET_RED(color); g = GET_GREEN(color); b = GET_BLUE(color);
   float h, s, v;
@@ -106,6 +107,21 @@ ColorEditorContent::ColorEditorContent(ModalWindow *window, const rect_t rect, u
   invalidate();
 }
 
+void ColorEditorContent::setRGB()
+{
+  int rgb = HSVtoRGB(hue, s, v);
+  r = GET_RED(rgb);
+  g = GET_GREEN(rgb);
+  b = GET_BLUE(rgb);
+  rEdit->setValue(r);
+  gEdit->setValue(g);
+  bEdit->setValue(b);
+  invalidate();
+
+  if (setValue != nullptr)
+    setValue(rgb);
+}
+
 #if defined(HARDWARE_TOUCH)
 bool ColorEditorContent::onTouchSlide(coord_t x, coord_t y, coord_t startX, coord_t startY, coord_t slideX, coord_t slideY)
 {
@@ -129,15 +145,8 @@ bool ColorEditorContent::onTouchSlide(coord_t x, coord_t y, coord_t startX, coor
     s = max(s, 0);
     v = min(100 - ((y - 60)), 100);
     v = max(v, 0);
-    
-    int rgb = HSVtoRGB(hue, s, v);
-    r = GET_RED(rgb);
-    g = GET_GREEN(rgb);
-    b = GET_BLUE(rgb);
-    rEdit->setValue(r);
-    gEdit->setValue(g);
-    bEdit->setValue(b);
-    invalidate();
+
+    setRGB();
   }
 
   return true;
@@ -166,14 +175,7 @@ bool ColorEditorContent::onTouchStart(coord_t x, coord_t y)
     v = min(100 - (y - 60), 100);
     s = min((x - 10) / 2, 100);
     
-    int rgb = HSVtoRGB(hue, s, v);
-    r = GET_RED(rgb);
-    g = GET_GREEN(rgb);
-    b = GET_BLUE(rgb);
-    rEdit->setValue(r);
-    gEdit->setValue(g);
-    bEdit->setValue(b);
-    invalidate();
+    setRGB();
   }
   return true;
 }
@@ -280,7 +282,11 @@ ColorEditorPopup::ColorEditorPopup(Window *window, std::function<uint32_t ()> ge
 {
   color = _getValue();
   rect_t r = { 50, 50, 360 + 20, 170 };
-  content = new ColorEditorContent(this, r, color);
+  content = new ColorEditorContent(this, r, color, [=] (uint32_t rgb) {
+    if (_setValue != nullptr)
+      _setValue(rgb);
+  });
+
   content->setFocus();
   bringToTop();
   content->setTitle("Color Picker");
@@ -329,7 +335,11 @@ ColorEntryEditor::ColorEntryEditor(Window *window, rect_t rect, std::function<vo
     setValue(setValue)
 {
 
-  cSquare = new ColorSquare(this, {5, 5, 60, 20}, [=] (ColorEntry value) { });
+  cSquare = new ColorSquare(this, {5, 5, 60, 20}, 
+    [=] (ColorEntry value) { 
+      colorEntry.colorValue = value.colorValue;
+      setValue(colorEntry);
+    });
 
   new StaticText(this, {5, FIRST_EDIT, 10, LINE_HEIGHT}, "R", 0,
                  COLOR_THEME_PRIMARY1);
@@ -375,6 +385,22 @@ ColorList::ColorList(
     tp(ThemePersistance::instance())
 {
   setSelected(0);
+  setLongPressHandler([=] (event_t event) {
+    createColorEditorPopup();
+  });
+}
+
+void ColorList::createColorEditorPopup()
+{
+  new ColorEditorPopup(this, 
+    [=] () {
+      return colorList[selected].colorValue;
+    },
+    [=] (uint32_t rgb) {
+      colorList[selected].colorValue = rgb;
+      _setValue(selected);
+      invalidate();
+    });
 }
 
 std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> colors)
@@ -388,6 +414,18 @@ std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> co
   return names;
 }
 
+bool ColorList::onTouchEnd(coord_t x, coord_t y)
+{
+  ListBase::onTouchEnd(x, y);
+  
+  int selY = selected * lineHeight;
+  if (x > rect.w - 22 && x < rect.w - 5 && y > selY && y < selY + lineHeight - 6) {
+    createColorEditorPopup();
+  }
+
+  return true;
+}
+
 void ColorList::drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, LcdFlags lcdFlags)
 {
   ListBase::drawLine(dc, rect, index, lcdFlags);
@@ -395,7 +433,6 @@ void ColorList::drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, L
                           COLOR2FLAGS(colorList[index].colorValue));
   dc->drawSolidRect(rect.w - 22, rect.y, 16, lineHeight - 6, 1, COLOR2FLAGS(BLACK));
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,11 @@ class ListBase : public FormField
       longPressHandler = handler;
     }
 
+    inline int getSelected() 
+    {
+      return selected;
+    }
+
     inline void setLineHeight(uint8_t height)
     {
       lineHeight = height;
@@ -64,10 +69,10 @@ class ListBase : public FormField
     std::function<void(uint32_t)> _setValue;
     int lineHeight;
     int32_t selected = -1;
-    
+
 #if defined(HARDWARE_TOUCH)
     uint32_t duration10ms;
-    bool longPressed = false;
+    coord_t yDown;
 #endif
 };
 
