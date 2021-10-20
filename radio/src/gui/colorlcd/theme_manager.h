@@ -102,6 +102,7 @@ class ThemeFile
     void setColorByIndex(int index, uint32_t color);
 
     virtual std::string getThemeImageFileName();
+    virtual std::vector<std::string> getThemeImageFileNames();
     virtual void applyTheme();
 
   protected:

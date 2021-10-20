@@ -21,12 +21,13 @@
 #include "tabsgroup.h"
 #include "color_editor.h"
 #include "file_preview.h"
+#include "file_carosell.h"
 
-class ThemeColorPreview: public Window
+class ThemeColorPreview: public FormField
 {
   public:
     ThemeColorPreview(Window *parent, const rect_t &rect, std::vector<ColorEntry> colorList) :
-      Window(parent, rect),
+      FormField(parent, rect, NO_FOCUS),
       colorList(colorList)
     {
     }
@@ -62,7 +63,7 @@ class ThemeSetupPage: public PageTab {
 
   protected:
     Window *previewWindow = nullptr;
-    FilePreview *filePreview = nullptr;
+    FileCarosell *fileCarosell = nullptr;
     ColorEditor *colorEditor = nullptr;
     ThemeColorPreview *themeColorPreview = nullptr;
     ListBox *listBox = nullptr;

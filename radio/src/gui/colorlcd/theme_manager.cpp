@@ -47,6 +47,35 @@ std::string ThemeFile::getThemeImageFileName()
   return "";
 }
 
+#define MAX_FILES 10
+std::vector<std::string> ThemeFile::getThemeImageFileNames()
+{
+  std::vector<std::string> fileNames;
+
+  char fullPath[FF_MAX_LFN + 1];
+  strncpy(fullPath, THEMES_PATH "/", FF_MAX_LFN);
+  auto found = path.rfind('.');
+  FIL file;
+  if (found != std::string::npos) {
+    int n = 0;
+    while (n < MAX_FILES) {
+      auto baseFileName(fullPath + path.substr(0, found) + (n != 0 ? std::to_string(n) : "") + ".png");
+      FRESULT result = f_open(&file, baseFileName.c_str(), FA_OPEN_EXISTING);
+      if (result == FR_OK) {
+        fileNames.emplace_back(baseFileName);
+        f_close(&file);
+      } else {
+        break;
+      }
+
+      n++;
+    }
+  }
+
+  return fileNames;
+}
+
+
 void ThemeFile::serialize()
 {
   char fullPath[FF_MAX_LFN + 1];
@@ -390,6 +419,13 @@ class DefaultEdgeTxTheme : public ThemeFile
     std::string getThemeImageFileName() override
     {
       return "/THEMES/EdgeTX.png";
+    }
+
+    std::vector<std::string> getThemeImageFileNames() override
+    {
+      std::vector<std::string> fileNames;
+      fileNames.emplace_back("/THEMES/EdgeTX.png");
+      return fileNames;
     }
 };
 

@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) EdgeTX
+ *
+ * Based on code named
+ *   opentx - https://github.com/opentx/opentx
+ *   th9x - http://code.google.com/p/th9x
+ *   er9x - http://code.google.com/p/er9x
+ *   gruvin9x - http://code.google.com/p/gruvin9x
+ *
+ * License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 #include "radio_theme.h"
 #include <algorithm>
 
@@ -226,7 +246,7 @@ class ThemeDetailsDialog: public Dialog
 class ThemeEditPage : public Page
 {
   public:
-    ThemeEditPage(ThemeFile theme, std::function<void (ThemeFile &theme)> saveHandler = nullptr) :
+    explicit ThemeEditPage(ThemeFile theme, std::function<void (ThemeFile &theme)> saveHandler = nullptr) :
       Page(ICON_MODEL_NOTES),
       theme(theme),
       page(this),
@@ -249,7 +269,7 @@ class ThemeEditPage : public Page
                      theme.getName(), 0, COLOR_THEME_PRIMARY2);
 
       // save and cancel
-      rect_t r = {LCD_W - (BUTTON_WIDTH + 5), 4, BUTTON_WIDTH, BUTTON_HEIGHT };
+      rect_t r = {LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
       saveButton = new TextButton(window, r, "Save", [=] () {
         if (saveHandler != nullptr)
           saveHandler(this->theme);
@@ -310,6 +330,12 @@ void ThemeSetupPage::build(FormWindow *window)
   auto theme = tp->getCurrentTheme();
   currentTheme = tp->getThemeIndex();
 
+  themeColorPreview = nullptr;
+  listBox = nullptr;
+  fileCarosell = nullptr;
+  nameText = nullptr;
+  authorText = nullptr;
+  
   rect_t r = { 0, 4, LEFT_LIST_WIDTH, LCD_H - TOPBAR_HEIGHT - 38 };
 
   listBox = new ListBox(
@@ -318,12 +344,12 @@ void ThemeSetupPage::build(FormWindow *window)
         return currentTheme;
       },
       [=](uint8_t value) {
-        if (themeColorPreview && authorText && nameText && filePreview) {
+        if (themeColorPreview && authorText && nameText && fileCarosell) {
           ThemeFile *theme = tp->getThemeByIndex(value);
           themeColorPreview->setColorList(theme->getColorList());
           authorText->setText(theme->getAuthor());
           nameText->setText(theme->getName());
-          filePreview->setFile(theme->getThemeImageFileName().c_str());
+          fileCarosell->setFileNames(theme->getThemeImageFileNames());
         }
         currentTheme = value;
       });
@@ -372,20 +398,17 @@ void ThemeSetupPage::build(FormWindow *window)
   r.y += 24;
 
   r.h = 150;
-  filePreview = new FilePreview(window, r, false);
-  filePreview->setFile(theme->getThemeImageFileName().c_str());
+  fileCarosell = new FileCarosell(window, r, theme->getThemeImageFileNames(), listBox);
 
   r.h = 22;
-  r.y += 130;
-  new StaticText(window, r, "Name:");
+  r.y += 120;
+  new StaticText(window, r, "Name:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
-  nameText = new StaticText(window, r, theme->getName());
+  nameText = new StaticText(window, r, theme->getName(), 0, COLOR_THEME_PRIMARY1);
 
   r.y += 22;
   r.x -= 80;
-  new StaticText(window, r, "Author:");
+  new StaticText(window, r, "Author:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
-  authorText = new StaticText(window, r, theme->getAuthor());
-
-  // window->setInnerHeight(grid.getWindowHeight());
+  authorText = new StaticText(window, r, theme->getAuthor(), 0, COLOR_THEME_PRIMARY1);
 }
