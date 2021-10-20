@@ -99,6 +99,7 @@ class ThemeFile
 
     std::vector<ColorEntry> getColorList() { return colorList; }
     void setColor(LcdColorIndex colorIndex, uint32_t color);
+    void setColorByIndex(int index, uint32_t color);
 
     virtual std::string getThemeImageFileName();
     virtual void applyTheme();

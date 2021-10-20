@@ -280,9 +280,8 @@ class ThemeEditPage : public Page
       cList = new ColorList(window, r, theme.getColorList(), 
         [=] (uint32_t value) {
           if (previewWindow) {
-            auto colorList = theme.getColorList();
-            colorList[value].colorValue = cList->getSelectedColor().colorValue;
-            colorMaintainer.setColorList(colorList);
+            theme.setColorByIndex(value, cList->getSelectedColor().colorValue);
+            colorMaintainer.setColorList(theme.getColorList());
             previewWindow->invalidate();
           }
         });
@@ -331,7 +330,6 @@ void ThemeSetupPage::build(FormWindow *window)
   listBox->setTitle("Themes");
   listBox->setLongPressHandler([=] (event_t event) {
     auto menu = new Menu(window,false);
-    menu->setCloseWhenClickOutside(false);
 
     // you cant edit the default theme
     if (listBox->getSelected() != 0) {
@@ -343,6 +341,13 @@ void ThemeSetupPage::build(FormWindow *window)
               t->setName(theme.getName());
               t->setAuthor(theme.getAuthor());
               t->setInfo(theme.getInfo());
+              int n = 0;
+
+              // update the colors that were edited
+              for (auto color : theme.getColorList()) {
+                t->setColorByIndex(n, color.colorValue);
+                n++;
+              }
             }
           });
       });

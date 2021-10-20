@@ -30,7 +30,7 @@ ListBase::ListBase(Window *parent, const rect_t &rect, std::vector<std::string> 
 
 void ListBase::setSelected(int selected)
 {
-  if (selected != this->selected) {
+  if (selected != this->selected && selected >= 0 && selected < names.size()) {
     this->selected = selected;
     setScrollPositionY(lineHeight * this->selected - lineHeight);
     _setValue(this->selected);
@@ -149,8 +149,18 @@ bool ListBase::onTouchStart(coord_t x, coord_t y)
 
   yDown = y;
 
-  return FormField::onTouchStart(x, y);
+  return true;  // stop the processing and say that i handled it i want the
 }
+
+bool ListBase::onTouchSlide(coord_t x, coord_t y, coord_t startX, coord_t startY, coord_t slideX, coord_t slideY)
+{
+  if (touchState.event == TE_SLIDE_END) { 
+    duration10ms = 0;
+  }
+  
+  return FormField::onTouchSlide(x, y, startX, startY, slideX, slideY);
+}
+
 
 bool ListBase::onTouchEnd(coord_t x, coord_t y)
 {

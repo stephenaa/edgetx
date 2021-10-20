@@ -238,6 +238,13 @@ bool ThemeFile::readNextLine(char *line, int maxlen)
   return false;
 }
 
+void ThemeFile::setColorByIndex(int index, uint32_t color)
+{
+  if (index >= 0 && index < colorList.size()) {
+    colorList[index].colorValue = color;
+  }
+}
+
 void ThemeFile::setColor(LcdColorIndex colorIndex, uint32_t color)
 {
   if (colorIndex >= DEFAULT_COLOR_INDEX && colorIndex < LCD_COLOR_COUNT) {

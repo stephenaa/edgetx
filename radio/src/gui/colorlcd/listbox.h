@@ -5,6 +5,7 @@
 #include <string>
 #include "bitmapbuffer.h"
 #include "libopenui.h"
+#include "touch.h"
 
 // base class for lists of elements with names
 class ListBase : public FormField
@@ -59,6 +60,7 @@ class ListBase : public FormField
     void checkEvents(void) override;
     bool onTouchEnd(coord_t x, coord_t y) override;
     bool onTouchStart(coord_t x, coord_t y) override;
+    bool onTouchSlide(coord_t x, coord_t y, coord_t startX, coord_t startY, coord_t slideX, coord_t slideY) override;
     bool isLongPress();
 #endif
 
