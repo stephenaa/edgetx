@@ -155,28 +155,6 @@ class ColorSquare : public FormField
     std::function<void (ColorEntry colorEntry)> setValue;
 };
 
-// a box that allows editing rgb, or pressing the color box to launch
-// a color editor
-class ColorEntryEditor : public FormGroup
-{
- public:
-  ColorEntryEditor(Window *window, rect_t rect, std::function<void(ColorEntry value)> setValue);
-
-  void setDirty();
-  void setColorToEdit(ColorEntry colorEntry);
-
- protected:
-  std::function<void(ColorEntry value)> setValue;
-  ColorEntry colorEntry = {LCD_COLOR_COUNT, 0};
-  NumberEdit *rEdit;
-  NumberEdit *gEdit;
-  NumberEdit *bEdit;
-  ColorSquare *cSquare;
-  uint32_t r = 0;
-  uint32_t g = 0;
-  uint32_t b = 0;
-};
-
 // a list of color theme names with their color to the right
 class ColorList : public ListBase
 {
@@ -208,31 +186,6 @@ class ColorList : public ListBase
   std::vector<ColorEntry> colorList;
   ThemePersistance *tp;
   void createColorEditorPopup();
-};
-
-// ColorEditor: the main control that orchristrates between ColorList and ColorEntryEditor
-class ColorEditor : public FormGroup
-{
- public:
-  ColorEditor(Window *window, rect_t rect, ThemeFile *theme,
-              std::function<void()> update = nullptr,
-              WindowFlags windowFlags = 0, LcdFlags lcdFlags = 0);
-
-  void paint(BitmapBuffer *dc) override;
-
-  inline std::vector<ColorEntry> getColorList()
-  {
-    return themeColorList;
-  }
-
-  void setTheme(ThemeFile *theme);
-
- protected:
-  std::vector<ColorEntry> themeColorList;
-  ThemeFile *theme;
-  ColorList *colorListWindow = nullptr;
-  ColorEntryEditor *colorEntryEditor = nullptr;
-  std::function<void()> update;
 };
 
 

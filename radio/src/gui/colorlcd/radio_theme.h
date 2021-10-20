@@ -64,7 +64,6 @@ class ThemeSetupPage: public PageTab {
   protected:
     Window *previewWindow = nullptr;
     FileCarosell *fileCarosell = nullptr;
-    ColorEditor *colorEditor = nullptr;
     ThemeColorPreview *themeColorPreview = nullptr;
     ListBox *listBox = nullptr;
     StaticText *authorText = nullptr;

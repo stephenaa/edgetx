@@ -137,8 +137,8 @@ bool ColorEditorContent::onTouchSlide(coord_t x, coord_t y, coord_t startX, coor
     x = min(x, 360);
     if (hue != x) {
       hue = x;
-      slidingWindow = this;  // so we get the end slide message
-      invalidate();
+      slidingWindow = this;  // KLK: (Hack IMHO) so we get the end slide message
+      setRGB();
     }
   } else if (colorPicking) {
     s = min((x - 10) / 2, 100);
@@ -320,59 +320,6 @@ void ColorEditorPopup::deleteLater(bool detach, bool trash)
   Window::deleteLater(detach, trash);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-/////                     ColorEntryEditor
-////////////////////////////////////////////////////////////////////////////////////////////////
-#define PREVIEW_Y_OFFSET 5
-#define PREVIEW_HEIGHT 22
-#define FIRST_EDIT (PREVIEW_HEIGHT + PREVIEW_Y_OFFSET + 3)
-#define SECOND_EDIT (FIRST_EDIT + LINE_HEIGHT)
-#define THIRD_EDIT (SECOND_EDIT + LINE_HEIGHT)
-
-ColorEntryEditor::ColorEntryEditor(Window *window, rect_t rect, std::function<void(ColorEntry value)> setValue) : 
-    FormGroup(window, rect),
-    setValue(setValue)
-{
-
-  cSquare = new ColorSquare(this, {5, 5, 60, 20}, 
-    [=] (ColorEntry value) { 
-      colorEntry.colorValue = value.colorValue;
-      setValue(colorEntry);
-    });
-
-  new StaticText(this, {5, FIRST_EDIT, 10, LINE_HEIGHT}, "R", 0,
-                 COLOR_THEME_PRIMARY1);
-  rEdit = new NumberEdit(this, {25, FIRST_EDIT, 40, LINE_HEIGHT}, 0, 255,
-                         GET_SET_DEFAULT(r), 0, COLOR_THEME_PRIMARY1);
-  new StaticText(this, {5, SECOND_EDIT, 10, LINE_HEIGHT}, "G", 0,
-                 COLOR_THEME_PRIMARY1);
-  gEdit = new NumberEdit(this, {25, SECOND_EDIT, 40, LINE_HEIGHT}, 0, 255,
-                         GET_SET_DEFAULT(g), 0, COLOR_THEME_PRIMARY1);
-  new StaticText(this, {5, THIRD_EDIT, 10, LINE_HEIGHT}, "B", 0,
-                 COLOR_THEME_PRIMARY1);
-  bEdit = new NumberEdit(this, {25, THIRD_EDIT, 40, LINE_HEIGHT}, 0, 255,
-                         GET_SET_DEFAULT(b), 0, COLOR_THEME_PRIMARY1);
-}
-
-void ColorEntryEditor::setDirty() { 
-  invalidate();
-  colorEntry.colorValue = RGB(r, g, b);
-  cSquare->setColorToEdit(colorEntry);
-  setValue(colorEntry);
-}
-
-void ColorEntryEditor::setColorToEdit(ColorEntry colorEntry)
-{
-  this->colorEntry = colorEntry;
-  cSquare->setColorToEdit(colorEntry);
-  r = GET_RED(colorEntry.colorValue);
-  g = GET_GREEN(colorEntry.colorValue);
-  b = GET_BLUE(colorEntry.colorValue);
-  invalidate();
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /////                     ColorList
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -433,58 +380,3 @@ void ColorList::drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, L
                           COLOR2FLAGS(colorList[index].colorValue));
   dc->drawSolidRect(rect.w - 22, rect.y, 16, lineHeight - 6, 1, COLOR2FLAGS(BLACK));
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-/////                     ColorEditor
-////////////////////////////////////////////////////////////////////////////////////////////////
-ColorEditor::ColorEditor(Window *window, rect_t rect, ThemeFile *theme, std::function<void()> update,
-                         WindowFlags windowFlags, LcdFlags lcdFlags) :
-    FormGroup(window, rect, windowFlags | NO_FOCUS), 
-    themeColorList(theme->getColorList()),
-    theme(theme),
-    update(update)
-{
-  rect_t r = {rect.x + 10 + (rect.w * 3) / 5, rect.y + LINE_HEIGHT, ((rect.w * 2) / 5) - 12, rect.h - LINE_HEIGHT - 2};
-  colorEntryEditor = new ColorEntryEditor(window, r, [=] (ColorEntry value) {
-    auto found = std::find(this->themeColorList.begin(), this->themeColorList.end(), value);
-    if (found != this->themeColorList.end()) {
-      found->colorValue = value.colorValue;
-      this->colorListWindow->setColorList(themeColorList);
-      if (update != nullptr)
-        update();
-    }
-  });
-
-  r = {rect.x + 2, rect.y + LINE_HEIGHT + 2, (rect.w * 3) / 5 - 2,
-              rect.h - LINE_HEIGHT - 4};
-  colorListWindow = new ColorList(
-      window, r, theme->getColorList(),
-      [=](uint32_t value) {
-        if (colorEntryEditor != nullptr) {
-          colorEntryEditor->setColorToEdit(themeColorList[value]);
-        }
-      },
-      windowFlags, lcdFlags);
-}
-
-void ColorEditor::paint(BitmapBuffer *dc)
-{
-  FormGroup::paint(dc);
-
-  dc->drawSolidFilledRect(2, 2, rect.w - 4, LINE_HEIGHT, COLOR_THEME_SECONDARY2);
-  dc->drawText(rect.w / 2, 4, "Theme Colors", COLOR_THEME_PRIMARY2 | CENTERED);
-}
-
-void ColorEditor::setTheme(ThemeFile *theme)
-{
-  // make a copy of the theme, so we can change it locally without affecting entire radio
-  // if it was the selected them
-  this->theme = theme;
-  auto colorList = theme->getColorList();
-  themeColorList.assign(colorList.begin(), colorList.end());
-  colorListWindow->setColorList(themeColorList);
-  colorEntryEditor->setColorToEdit(colorListWindow->getSelectedColor());
-  invalidate();
-}
-

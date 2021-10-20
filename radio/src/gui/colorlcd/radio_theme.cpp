@@ -374,6 +374,9 @@ void ThemeSetupPage::build(FormWindow *window)
                 t->setColorByIndex(n, color.colorValue);
                 n++;
               }
+
+              // the list of theme names might have changed
+              listBox->setNames(tp->getNames());
             }
           });
       });
