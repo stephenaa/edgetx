@@ -269,7 +269,7 @@ bool ThemeFile::readNextLine(char *line, int maxlen)
 
 void ThemeFile::setColorByIndex(int index, uint32_t color)
 {
-  if (index >= 0 && index < colorList.size()) {
+  if (index >= 0 && index < (int) colorList.size()) {
     colorList[index].colorValue = color;
   }
 }
@@ -378,12 +378,14 @@ void ThemePersistance::deleteDefaultTheme()
 void ThemePersistance::setDefaultTheme(int index)
 {
   FIL file;
-  auto theme = themes[index];
-  FRESULT status = f_open(&file, SELECTED_THEME_FILE, FA_CREATE_ALWAYS | FA_WRITE);
-  if (status != FR_OK) return;
+  if (index > 0 && index < (int) themes.size()) {
+    auto theme = themes[index];
+    FRESULT status = f_open(&file, SELECTED_THEME_FILE, FA_CREATE_ALWAYS | FA_WRITE);
+    if (status != FR_OK) return;
 
-  f_printf(&file, theme->getPath().c_str());
-  f_close(&file);
+    f_printf(&file, theme->getPath().c_str());
+    f_close(&file);
+  }
 }
 
 class DefaultEdgeTxTheme : public ThemeFile

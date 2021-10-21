@@ -388,24 +388,28 @@ void ThemeSetupPage::build(FormWindow *window)
     if (listBox->getSelected() != 0) {
       menu->addLine("Edit Theme",
         [=] () {
-          new ThemeEditPage(*tp->getThemeByIndex(currentTheme), [=](ThemeFile &theme) {
-            auto t = tp->getThemeByIndex(currentTheme);
-            if (t != nullptr) {
-              t->setName(theme.getName());
-              t->setAuthor(theme.getAuthor());
-              t->setInfo(theme.getInfo());
-              int n = 0;
+          auto theme = tp->getThemeByIndex(currentTheme);
+          if (theme == nullptr) return;
+          
+          new ThemeEditPage(*tp->getThemeByIndex(currentTheme), 
+            [=](ThemeFile &theme) {
+              auto t = tp->getThemeByIndex(currentTheme);
+              if (t != nullptr) {
+                t->setName(theme.getName());
+                t->setAuthor(theme.getAuthor());
+                t->setInfo(theme.getInfo());
+                int n = 0;
 
-              // update the colors that were edited
-              for (auto color : theme.getColorList()) {
-                t->setColorByIndex(n, color.colorValue);
-                n++;
+                // update the colors that were edited
+                for (auto color : theme.getColorList()) {
+                  t->setColorByIndex(n, color.colorValue);
+                  n++;
+                }
+
+                // the list of theme names might have changed
+                listBox->setNames(tp->getNames());
               }
-
-              // the list of theme names might have changed
-              listBox->setNames(tp->getNames());
-            }
-          });
+            });
       });
     }
     menu->addLine("New", [=] () {});
@@ -429,22 +433,24 @@ void ThemeSetupPage::build(FormWindow *window)
     r.w = LCD_W;
   }
 
+  auto colorList = theme != nullptr ? theme->getColorList() : std::vector<ColorEntry>();
   r.h = 20;
-  themeColorPreview = new ThemeColorPreview(window, r, theme->getColorList());
+  themeColorPreview = new ThemeColorPreview(window, r, colorList);
   r.y += 24;
 
   r.h = 150;
-  fileCarosell = new FileCarosell(window, r, theme->getThemeImageFileNames(), listBox);
+  auto fileNames = theme != nullptr ? theme->getThemeImageFileNames() : std::vector<std::string>();
+  fileCarosell = new FileCarosell(window, r, fileNames, listBox);
 
   r.h = 22;
   r.y += 120;
   new StaticText(window, r, "Name:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
-  nameText = new StaticText(window, r, theme->getName(), 0, COLOR_THEME_PRIMARY1);
+  nameText = new StaticText(window, r, theme != nullptr ? theme->getName() : "", 0, COLOR_THEME_PRIMARY1);
 
   r.y += 22;
   r.x -= 80;
   new StaticText(window, r, "Author:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
-  authorText = new StaticText(window, r, theme->getAuthor(), 0, COLOR_THEME_PRIMARY1);
+  authorText = new StaticText(window, r, theme != nullptr ? theme->getAuthor() : "", 0, COLOR_THEME_PRIMARY1);
 }

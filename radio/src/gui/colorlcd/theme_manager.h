@@ -157,15 +157,28 @@ class ThemePersistance
 
     void applyTheme(int index)
     {
-        auto theme = themes[index];
+      if (index > 0 && index < (int) themes.size()) {
+         auto theme = themes[index];
         theme->applyTheme();
+      }
     }
 
     inline int getThemeIndex() {return currentTheme;}
     inline void setThemeIndex(int index) { currentTheme = index;}
 
-    inline ThemeFile* getCurrentTheme() { return themes[currentTheme]; }
-    inline ThemeFile* getThemeByIndex(int index) { return themes[index]; }
+    inline ThemeFile* getCurrentTheme() 
+    { 
+      if (currentTheme < (int)themes.size()) 
+        return themes[currentTheme];
+      return nullptr;
+    }
+
+    inline ThemeFile* getThemeByIndex(int index) 
+    { 
+      if (index < (int) themes.size())
+        return themes[index]; 
+      return nullptr;
+    }
 
     void refresh()
     {
