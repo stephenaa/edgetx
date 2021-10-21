@@ -67,6 +67,8 @@ class ThemeSetupPage: public PageTab {
     ThemeColorPreview *themeColorPreview = nullptr;
     ListBox *listBox = nullptr;
     StaticText *authorText = nullptr;
+    StaticText *authorLabel = nullptr;
+    StaticText *nameLabel = nullptr;
     StaticText *nameText = nullptr;
     int currentTheme = 0;
 };

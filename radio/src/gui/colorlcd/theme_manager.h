@@ -157,7 +157,7 @@ class ThemePersistance
 
     void applyTheme(int index)
     {
-      if (index > 0 && index < (int) themes.size()) {
+      if (index >= 0 && index < (int) themes.size()) {
          auto theme = themes[index];
         theme->applyTheme();
       }

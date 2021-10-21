@@ -379,7 +379,7 @@ void ThemePersistance::deleteDefaultTheme()
 void ThemePersistance::setDefaultTheme(int index)
 {
   FIL file;
-  if (index > 0 && index < (int) themes.size()) {
+  if (index >= 0 && index < (int) themes.size()) {
     auto theme = themes[index];
     FRESULT status = f_open(&file, SELECTED_THEME_FILE, FA_CREATE_ALWAYS | FA_WRITE);
     if (status != FR_OK) return;

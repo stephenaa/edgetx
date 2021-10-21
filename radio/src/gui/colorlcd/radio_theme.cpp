@@ -442,11 +442,13 @@ void ThemeSetupPage::build(FormWindow *window)
     menu->addLine("Set Active", [=] () {
       tp->applyTheme(listBox->getSelected());
       tp->setDefaultTheme(listBox->getSelected());
+      nameText->setTextFlags(COLOR_THEME_PRIMARY1);
+      authorText->setTextFlags(COLOR_THEME_PRIMARY1);
+      nameLabel->setTextFlags(COLOR_THEME_PRIMARY1);
+      authorLabel->setTextFlags(COLOR_THEME_PRIMARY1);
     });
     if (listBox->getSelected() != 0) {
-      menu->addLine("Delete", [=] () {
-        TRACE("SELECTED");
-      });
+      menu->addLine("Delete", [=] () {});
     }
   });
 
@@ -470,13 +472,13 @@ void ThemeSetupPage::build(FormWindow *window)
 
   r.h = 22;
   r.y += 120;
-  new StaticText(window, r, "Name:", 0, COLOR_THEME_PRIMARY1);
+  nameLabel = new StaticText(window, r, "Name:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
   nameText = new StaticText(window, r, theme != nullptr ? theme->getName() : "", 0, COLOR_THEME_PRIMARY1);
 
   r.y += 22;
   r.x -= 80;
-  new StaticText(window, r, "Author:", 0, COLOR_THEME_PRIMARY1);
+  authorLabel = new StaticText(window, r, "Author:", 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
   authorText = new StaticText(window, r, theme != nullptr ? theme->getAuthor() : "", 0, COLOR_THEME_PRIMARY1);
 }
