@@ -36,7 +36,7 @@
 
 #if (LCD_W > LCD_H)
   #define LEFT_LIST_WIDTH 200
-  #define LEFT_LIST_HEIGHT LCD_H - TOPBAR_HEIGHT - 38
+  #define LEFT_LIST_HEIGHT LCD_H - TOPBAR_HEIGHT
 #else
   #define LEFT_LIST_WIDTH LCD_W
   #define LEFT_LIST_HEIGHT (LCD_H / 2 - 38)
@@ -128,6 +128,30 @@ class ThemedCheckBox : public CheckBox
     bool checked;
 };
 
+class ThemedMainViewHorizontalTrim : public MainViewHorizontalTrim
+{
+  public:
+    using MainViewHorizontalTrim::MainViewHorizontalTrim;
+    void paint (BitmapBuffer *dc) override 
+    {
+      colorMaintainer.applyColorList();
+      MainViewHorizontalTrim::paint(dc);
+      colorMaintainer.restoreColorValues();
+    }
+};
+
+class ThemedMainViewHorizontalSlider: public MainViewHorizontalSlider
+{
+  public: 
+    using MainViewHorizontalSlider::MainViewHorizontalSlider;
+    void paint (BitmapBuffer *dc) override
+    {
+      colorMaintainer.applyColorList();
+      MainViewHorizontalSlider::paint(dc);
+      colorMaintainer.restoreColorValues();
+    }
+};
+
 class PreviewWindow : public FormGroup
 {
   friend class ThemedCheckBox;
@@ -140,6 +164,8 @@ class PreviewWindow : public FormGroup
       new ThemedStaticText(this, {5, 40, 100, LINE_HEIGHT}, "Checkbox", 0, COLOR_THEME_PRIMARY1);
       new ThemedCheckBox(this, {100 + 15, 40, 20, LINE_HEIGHT}, true);
       new ThemedCheckBox(this, {140 + 15, 40, 20, LINE_HEIGHT}, false);
+      new ThemedMainViewHorizontalTrim(this, {5, 65, HORIZONTAL_SLIDERS_WIDTH, 20}, 0);
+      new ThemedMainViewHorizontalSlider(this, {5, 87, HORIZONTAL_SLIDERS_WIDTH, 20}, 0);
       colorMaintainer.setColorList(colorList);
     }
 
@@ -230,7 +256,7 @@ class ThemeDetailsDialog: public Dialog
       saveHandler(saveHandler)
     {
       FormGridLayout grid(detailsDialogRect.w);
-      grid.setLabelWidth(150);
+      grid.setLabelWidth(labelWidth);
       grid.spacer(8);
 
       new StaticText(&content->form, grid.getLabelSlot(), "Name", 0, COLOR_THEME_PRIMARY1);
