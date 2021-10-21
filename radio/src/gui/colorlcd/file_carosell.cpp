@@ -39,7 +39,11 @@ FileCarosell::FileCarosell(Window *parent, const rect_t &rect,
   auto tbNext = new TextButton(
       this, {rect.w - 30, rect.h / 2 - 20, 20, 30}, ">",
       [=]() {
-        int newSelected = (selected + 1) % _fileNames.size();
+        int newSelected = 0;
+        if (_fileNames.size() > 0) {
+          newSelected = (selected + 1) % _fileNames.size();
+        }
+
         setSelected(newSelected);
         return 0;
       },

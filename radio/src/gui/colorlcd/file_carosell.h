@@ -32,10 +32,12 @@ class FileCarosell : public FormGroup
 
   inline void setSelected(int n)
   {
-    if (n != selected && n >= 0 && n <= _fileNames.size()) {
+    if (n != selected && n >= 0 && n < (int)_fileNames.size()) {
       selected = n;
       fp->setFile(_fileNames[selected].c_str());
-    }
+    } else
+      fp->setFile("");
+
   }
 
   inline void setFileNames(std::vector<std::string> fileNames)

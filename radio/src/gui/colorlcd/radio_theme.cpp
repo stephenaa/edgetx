@@ -30,10 +30,18 @@
 #include "view_main.h"
 #include "widget_settings.h"
 #include "sliders.h"
+#include "color_list.h"
 #include "color_editor.h"
 #include "listbox.h"
 
-#define LEFT_LIST_WIDTH 200
+#if (LCD_W > LCD_H)
+  #define LEFT_LIST_WIDTH 200
+  #define LEFT_LIST_HEIGHT LCD_H - TOPBAR_HEIGHT - 38
+#else
+  #define LEFT_LIST_WIDTH LCD_W
+  #define LEFT_LIST_HEIGHT (LCD_H / 2 - 38)
+#endif
+
 #define MARGIN_WIDTH 5
 
 
@@ -199,18 +207,29 @@ class PreviewWindow : public FormGroup
     CheckBox *checkBox;
 };
 
-constexpr int BUTTON_HEIGHT = 30;
-constexpr int BUTTON_WIDTH  = 75;
+#if (LCD_W > LCD_H)
+  constexpr int BUTTON_HEIGHT = 30;
+  constexpr int BUTTON_WIDTH  = 75;
+  constexpr LcdFlags textFont = FONT(STD);
+  constexpr rect_t detailsDialogRect = {50, 50, 400, 170};
+  constexpr int labelWidth = 150;
+#else
+  constexpr int BUTTON_HEIGHT = 25;
+  constexpr int BUTTON_WIDTH  = 50;
+  constexpr LcdFlags textFont = FONT(XS);
+  constexpr rect_t detailsDialogRect = {5, 50, LCD_W - 10, 340};
+  constexpr int labelWidth = 120;
+#endif
 
 class ThemeDetailsDialog: public Dialog
 {
   public:
     ThemeDetailsDialog(Window *parent, ThemeFile theme, std::function<void (ThemeFile theme)> saveHandler = nullptr) :
-      Dialog(parent, "Edit Details", {50, 50, 400, 170}),
+      Dialog(parent, "Edit Details", detailsDialogRect),
       theme(theme),
       saveHandler(saveHandler)
     {
-      FormGridLayout grid(400);
+      FormGridLayout grid(detailsDialogRect.w);
       grid.setLabelWidth(150);
       grid.spacer(8);
 
@@ -225,18 +244,18 @@ class ThemeDetailsDialog: public Dialog
       new TextEdit(&content->form, grid.getLineSlot(), this->theme.getInfo(), INFO_LENGTH);
       grid.nextLine();
 
-      rect_t r = {400 - (BUTTON_WIDTH + 5), grid.getWindowHeight() + 5, BUTTON_WIDTH, BUTTON_HEIGHT };
+      rect_t r = {detailsDialogRect.w - (BUTTON_WIDTH + 5), grid.getWindowHeight() + 5, BUTTON_WIDTH, BUTTON_HEIGHT };
       new TextButton(&content->form, r, "Save", [=] () {
         if (saveHandler != nullptr)
           saveHandler(this->theme);
         deleteLater();
         return 0;
-      });
+      }, BUTTON_BACKGROUND | OPAQUE, textFont);
       r.x -= (BUTTON_WIDTH + 5);
       new TextButton(&content->form, r, "Cancel", [=] () {
         deleteLater();
         return 0;
-      });
+      }, BUTTON_BACKGROUND | OPAQUE, textFont);
     }
   protected:
     ThemeFile theme;
@@ -258,15 +277,20 @@ class ThemeEditPage : public Page
 
     void buildHeader(FormGroup *window)
     {
+      LcdFlags flags = 0;
+      if (LCD_W < LCD_H) {
+        flags = FONT(XS);
+      }
+
       // page title
       new StaticText(window,
                      {PAGE_TITLE_LEFT, PAGE_TITLE_TOP, LCD_W - PAGE_TITLE_LEFT,
                       PAGE_LINE_HEIGHT},
-                     "Edit Theme", 0, COLOR_THEME_PRIMARY2);
+                     "Edit Theme", 0, COLOR_THEME_PRIMARY2 | flags);
       themeName = new StaticText(window,
                      {PAGE_TITLE_LEFT, PAGE_TITLE_TOP + PAGE_LINE_HEIGHT,
                       LCD_W - PAGE_TITLE_LEFT, PAGE_LINE_HEIGHT},
-                     theme.getName(), 0, COLOR_THEME_PRIMARY2);
+                     theme.getName(), 0, COLOR_THEME_PRIMARY2 | flags);
 
       // save and cancel
       rect_t r = {LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
@@ -275,7 +299,7 @@ class ThemeEditPage : public Page
           saveHandler(this->theme);
         deleteLater();
         return 0;
-      });
+      }, BUTTON_BACKGROUND | OPAQUE, textFont);
       r.x -= (BUTTON_WIDTH + 5);
       detailButton = new TextButton(window, r, "Details", [=] () {
         new ThemeDetailsDialog(page, theme, [=] (ThemeFile t) {
@@ -287,7 +311,7 @@ class ThemeEditPage : public Page
           themeName->setText(theme.getName());
         });
         return 0;
-      });
+      }, BUTTON_BACKGROUND | OPAQUE, textFont);
 
       // setup the prev next controls so save and details are in the mix
       window->link(cList, detailButton);
@@ -296,7 +320,7 @@ class ThemeEditPage : public Page
 
     void buildBody(FormGroup *window)
     {
-      rect_t r = { 0, 4, LEFT_LIST_WIDTH, LCD_H - TOPBAR_HEIGHT };
+      rect_t r = { 0, 4, LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT };
       cList = new ColorList(window, r, theme.getColorList(), 
         [=] (uint32_t value) {
           if (previewWindow) {
@@ -305,8 +329,12 @@ class ThemeEditPage : public Page
             previewWindow->invalidate();
           }
         });
-        
-      r = { LEFT_LIST_WIDTH + MARGIN_WIDTH, 4, LCD_W - LEFT_LIST_WIDTH - MARGIN_WIDTH, LCD_H - TOPBAR_HEIGHT };
+      
+      if (LCD_W > LCD_H) {
+        r = { LEFT_LIST_WIDTH + MARGIN_WIDTH, 4, LCD_W - LEFT_LIST_WIDTH - MARGIN_WIDTH, LCD_H - TOPBAR_HEIGHT };
+      } else {
+        r = { 0, LEFT_LIST_HEIGHT + 4,  LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT - 4};
+      }
       previewWindow = new PreviewWindow(window, r, theme.getColorList());
     }
 
@@ -320,7 +348,6 @@ class ThemeEditPage : public Page
     TextButton *saveButton;
     TextButton *detailButton;
 };
-
 
 ThemeSetupPage::ThemeSetupPage() : PageTab("Theme Editor", ICON_MODEL_NOTES) {}
 
@@ -336,7 +363,7 @@ void ThemeSetupPage::build(FormWindow *window)
   nameText = nullptr;
   authorText = nullptr;
   
-  rect_t r = { 0, 4, LEFT_LIST_WIDTH, LCD_H - TOPBAR_HEIGHT - 38 };
+  rect_t r = { 0, 4, LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT };
 
   listBox = new ListBox(
     window, r, tp->getNames(),
@@ -393,8 +420,14 @@ void ThemeSetupPage::build(FormWindow *window)
     }
   });
 
-  r.x = LEFT_LIST_WIDTH + MARGIN_WIDTH;
-  r.w = LCD_W - r.x;
+  if (LCD_W > LCD_H) {
+    r.x = LEFT_LIST_WIDTH + MARGIN_WIDTH;
+    r.w = LCD_W - r.x;
+  } else {
+    r.y += LEFT_LIST_HEIGHT + 4;
+    r.x = 0;
+    r.w = LCD_W;
+  }
 
   r.h = 20;
   themeColorPreview = new ThemeColorPreview(window, r, theme->getColorList());

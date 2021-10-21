@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) EdgeTX
+ *
+ * Based on code named
+ *   opentx - https://github.com/opentx/opentx
+ *   th9x - http://code.google.com/p/th9x
+ *   er9x - http://code.google.com/p/er9x
+ *   gruvin9x - http://code.google.com/p/gruvin9x
+ *
+ * License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 #include "color_editor.h"
 
 #define SET_DIRTY() setDirty()
@@ -5,6 +25,29 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /////                     ColorEditorContent
 ////////////////////////////////////////////////////////////////////////////////////////////////
+constexpr int MAX_SATURATION     = 100;
+constexpr int MAX_BRIGHTNESS     = 100;
+constexpr int MAX_HUE            = 360;
+
+constexpr int GRID_TOP_MARGIN    = 60;
+ 
+constexpr int HUE_BAR_TOP_MARGIN = 35;
+constexpr int HUE_BAR_HEIGHT     = 20;
+ 
+constexpr int COLOR_BOX_TOP      = 130;
+constexpr int COLOR_BOX_WIDTH    = 90;
+constexpr int COLOR_BOX_HEIGHT   = 32;
+
+#if (LCD_W > LCD_H)
+constexpr int COLOR_BOX_LEFT     = 240;
+constexpr int SCREEN_LEFT_MARGIN = 10;
+constexpr rect_t contentRect     = { 50, 50, 360 + 20, 170 };
+#else
+constexpr int COLOR_BOX_LEFT     = 210;
+constexpr rect_t contentRect     = { 5, 50, LCD_W - 10, 170 };
+constexpr int SCREEN_LEFT_MARGIN = 0;
+#endif
+
 uint32_t HSVtoRGB(float H, float S,float V) 
 {
   if (H > 360 || H < 0 || S > 100 || S < 0 || V > 100 || V < 0) {
@@ -90,8 +133,8 @@ ColorEditorContent::ColorEditorContent(ModalWindow *window, const rect_t rect, u
   this->s = 100 * s;
   this->v = 100 * v;
 
-  rect_t rText = {240, 60, 40, 20};
-  rect_t rNumber = {290, 60, 40, 20};
+  rect_t rText = {COLOR_BOX_LEFT, 60, 50, 20};
+  rect_t rNumber = {COLOR_BOX_LEFT + 60, 60, 40, 20};
 
   new StaticText(this, rText, "Red", 0, COLOR_THEME_PRIMARY1);
   rText.y += 23;
@@ -113,6 +156,7 @@ void ColorEditorContent::setRGB()
   r = GET_RED(rgb);
   g = GET_GREEN(rgb);
   b = GET_BLUE(rgb);
+
   rEdit->setValue(r);
   gEdit->setValue(g);
   bEdit->setValue(b);
@@ -126,24 +170,23 @@ void ColorEditorContent::setRGB()
 bool ColorEditorContent::onTouchSlide(coord_t x, coord_t y, coord_t startX, coord_t startY, coord_t slideX, coord_t slideY)
 {
   if (touchState.event == TE_SLIDE_END) {
-    TRACE("touchState: %d", touchState.event);
     sliding = false;
     colorPicking = false;
     slidingWindow = nullptr;
     invalidate();
   } else if (sliding) {
-    x -= 10;
+    x -= SCREEN_LEFT_MARGIN;
     x = max(x, 0);
-    x = min(x, 360);
+    x = min(x, MAX_HUE);
     if (hue != x) {
       hue = x;
       slidingWindow = this;  // KLK: (Hack IMHO) so we get the end slide message
       setRGB();
     }
   } else if (colorPicking) {
-    s = min((x - 10) / 2, 100);
+    s = min((x - SCREEN_LEFT_MARGIN) / 2, MAX_SATURATION);
     s = max(s, 0);
-    v = min(100 - ((y - 60)), 100);
+    v = min(MAX_BRIGHTNESS - ((y - GRID_TOP_MARGIN)), MAX_BRIGHTNESS);
     v = max(v, 0);
 
     setRGB();
@@ -162,18 +205,18 @@ bool ColorEditorContent::onTouchEnd(coord_t x, coord_t y)
 
 bool ColorEditorContent::onTouchStart(coord_t x, coord_t y)
 {
-  if (! sliding && (y > 40 && y < 53))
+  if (! sliding && (y > HUE_BAR_TOP_MARGIN && y < HUE_BAR_TOP_MARGIN + HUE_BAR_HEIGHT))
   {
-    hue = x - 10;
+    hue = x - SCREEN_LEFT_MARGIN;
     hue = max(hue, 0);
-    hue = min(hue, 360);
+    hue = min(hue, MAX_HUE);
     sliding = true;
     
     invalidate();
-  } else if (x >= 10 && x <= 212 && y >= 60 && y <= 161) {
+  } else if (x >= SCREEN_LEFT_MARGIN && x <= SCREEN_LEFT_MARGIN + (MAX_SATURATION * 2) && y >= GRID_TOP_MARGIN && y <= GRID_TOP_MARGIN + MAX_BRIGHTNESS) {
     colorPicking = true;
-    v = min(100 - (y - 60), 100);
-    s = min((x - 10) / 2, 100);
+    v = min(MAX_BRIGHTNESS - (y - GRID_TOP_MARGIN), MAX_BRIGHTNESS);
+    s = min((x - SCREEN_LEFT_MARGIN) / 2, MAX_SATURATION);
     
     setRGB();
   }
@@ -195,80 +238,57 @@ void ColorEditorContent::onEvent(event_t event)
   }
 
   hue = max(hue, 0);
-  hue = min(hue, 360);
+  hue = min(hue, MAX_HUE);
   if (hue != oldSliderVal) {
     invalidate();
   }
 }
 #endif
 
-void ColorEditorContent::drawTop(BitmapBuffer *dc)
-{
-  int r = 255, g = 0, b = 0;
-  int state = 0;
-  for (int i = 0; i < 360; i++) {
-    dc->drawSolidVerticalLine(i + 10, 35, 20, COLOR2FLAGS(RGB(r, g, b)));
 
-    if (state == 0) {
-      g = min(g + 5, 255);
-      if (g == 255)
-        state++;
-    } else if (state == 1) {
-      r = max(r - 5, 0);
-      if (r == 0)
-        state++;
-    } else if (state == 2) {
-      b = min(b + 5, 255);
-      if (b == 255)
-        state++;
-    } else if (state == 3) {
-      g = max(g - 5, 0);
-      if (g == 0)
-        state++;
-    } else if (state == 4) {
-      r = min(r + 5, 255);
-      if (r == 255) 
-        state++;
-    } else if (state == 5) {
-      b = max(b - 5, 0);
-      if (b == 0)
-        state++;
-    }
+void ColorEditorContent::drawHewBar(BitmapBuffer *dc)
+{
+  for (int i = 0; i < MAX_HUE; i++) {
+    auto rgb = HSVtoRGB(i, MAX_SATURATION, MAX_BRIGHTNESS);
+    auto r = GET_RED(rgb);
+    auto g = GET_GREEN(rgb);
+    auto b = GET_BLUE(rgb);
+    dc->drawSolidVerticalLine(i + SCREEN_LEFT_MARGIN, HUE_BAR_TOP_MARGIN, HUE_BAR_HEIGHT, COLOR2FLAGS(RGB(r, g, b)));
   }
 
-  dc->drawFilledCircle(hue + 10, 35 + (20 / 2), 5, COLOR2FLAGS(RGB(255,255,255)));
+  dc->drawFilledCircle(hue + SCREEN_LEFT_MARGIN, HUE_BAR_TOP_MARGIN + (HUE_BAR_HEIGHT / 2), 5, COLOR2FLAGS(WHITE));
   if (sliding) {
-    dc->drawText(hue + 5, 25, std::to_string(hue).c_str(), FONT(XXS) | COLOR2FLAGS(WHITE));
+    dc->drawText(hue + (SCREEN_LEFT_MARGIN / 2), 25, std::to_string(hue).c_str(), FONT(XXS) | COLOR2FLAGS(WHITE));
   }
 }
 
 void ColorEditorContent::drawGrid(BitmapBuffer *dc) 
 {
-  for (int s = 0; s <= 100; s++) {
-    for (int v = 100; v >= 0; v--) {
+  for (int s = 0; s <= MAX_SATURATION; s++) {
+    for (int v = MAX_BRIGHTNESS; v >= 0; v--) {
       uint32_t rgbVal = HSVtoRGB(hue, s, v);
-      dc->drawPixel((s * 2) + 10, ((100 - v)) + 60, rgbVal);
-      dc->drawPixel((s * 2) + 11, ((100 - v)) + 60, rgbVal);
+      dc->drawPixel((s * 2) + SCREEN_LEFT_MARGIN    , ((MAX_BRIGHTNESS - v)) + GRID_TOP_MARGIN, rgbVal);
+      dc->drawPixel((s * 2) + SCREEN_LEFT_MARGIN + 1, ((MAX_BRIGHTNESS - v)) + GRID_TOP_MARGIN, rgbVal);
     }
   }
 
-  dc->drawFilledCircle((this->s * 2) + 10, (100 - this->v) + 60, 3, COLOR2FLAGS(WHITE));
+  dc->drawFilledCircle((this->s * 2) + SCREEN_LEFT_MARGIN, (MAX_BRIGHTNESS - this->v) + GRID_TOP_MARGIN, 3, COLOR2FLAGS(WHITE));
 }
 
-void ColorEditorContent::drawColor(BitmapBuffer *dc)
+void ColorEditorContent::drawColorBox(BitmapBuffer *dc)
 {
   int32_t rgb = RGB(r,g,b);
 
-  dc->drawSolidFilledRect(240, 130, 90, 32, COLOR2FLAGS(rgb));
-  dc->drawSolidRect(240, 130, 90, 32, 1, COLOR2FLAGS(BLACK));
+  dc->drawSolidFilledRect(COLOR_BOX_LEFT, COLOR_BOX_TOP, COLOR_BOX_WIDTH, COLOR_BOX_HEIGHT, COLOR2FLAGS(rgb));
+  dc->drawSolidRect(COLOR_BOX_LEFT, COLOR_BOX_TOP, COLOR_BOX_WIDTH, COLOR_BOX_HEIGHT, 1, COLOR2FLAGS(BLACK));
 }
 
 void ColorEditorContent::paint(BitmapBuffer *dc)
 {
   ModalWindowContent::paint(dc);
-  drawTop(dc);
+  drawHewBar(dc);
   drawGrid(dc);
-  drawColor(dc);
+  drawColorBox(dc);
 }
 
 
@@ -281,8 +301,7 @@ ColorEditorPopup::ColorEditorPopup(Window *window, std::function<uint32_t ()> ge
   _setValue(setValue)
 {
   color = _getValue();
-  rect_t r = { 50, 50, 360 + 20, 170 };
-  content = new ColorEditorContent(this, r, color, [=] (uint32_t rgb) {
+  content = new ColorEditorContent(this, contentRect, color, [=] (uint32_t rgb) {
     if (_setValue != nullptr)
       _setValue(rgb);
   });
@@ -320,63 +339,4 @@ void ColorEditorPopup::deleteLater(bool detach, bool trash)
   Window::deleteLater(detach, trash);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/////                     ColorList
-////////////////////////////////////////////////////////////////////////////////////////////////
-ColorList::ColorList(
-    Window *parent, const rect_t &rect, std::vector<ColorEntry> colors,
-    std::function<void(uint32_t value)> setValue,
-    WindowFlags windowFlag, LcdFlags lcdFlags) :
-    ListBase(parent, rect, getColorListNames(colors), nullptr, setValue),
-    colorList(colors),
-    tp(ThemePersistance::instance())
-{
-  setSelected(0);
-  setLongPressHandler([=] (event_t event) {
-    createColorEditorPopup();
-  });
-}
 
-void ColorList::createColorEditorPopup()
-{
-  new ColorEditorPopup(this, 
-    [=] () {
-      return colorList[selected].colorValue;
-    },
-    [=] (uint32_t rgb) {
-      colorList[selected].colorValue = rgb;
-      _setValue(selected);
-      invalidate();
-    });
-}
-
-std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> colors)
-{
-  std::vector<std::string> names;
-  char **colorNames = tp->getColorNames();
-  for (auto color : colors) {
-    names.emplace_back(colorNames[color.colorNumber]);
-  }
-  
-  return names;
-}
-
-bool ColorList::onTouchEnd(coord_t x, coord_t y)
-{
-  ListBase::onTouchEnd(x, y);
-  
-  int selY = selected * lineHeight;
-  if (x > rect.w - 22 && x < rect.w - 5 && y > selY && y < selY + lineHeight - 6) {
-    createColorEditorPopup();
-  }
-
-  return true;
-}
-
-void ColorList::drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, LcdFlags lcdFlags)
-{
-  ListBase::drawLine(dc, rect, index, lcdFlags);
-  dc->drawSolidFilledRect(rect.w - 22, rect.y, 16, lineHeight - 6,
-                          COLOR2FLAGS(colorList[index].colorValue));
-  dc->drawSolidRect(rect.w - 22, rect.y, 16, lineHeight - 6, 1, COLOR2FLAGS(BLACK));
-}

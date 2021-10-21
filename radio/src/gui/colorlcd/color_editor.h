@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) EdgeTX
+ *
+ * Based on code named
+ *   opentx - https://github.com/opentx/opentx
+ *   th9x - http://code.google.com/p/th9x
+ *   er9x - http://code.google.com/p/er9x
+ *   gruvin9x - http://code.google.com/p/gruvin9x
+ *
+ * License GPLv2: http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 #pragma once
 #include <algorithm>
 #include <vector>
@@ -42,9 +62,9 @@ class ColorEditorContent : public ModalWindowContent
     NumberEdit *gEdit;
     NumberEdit *bEdit;
 
-    void drawTop(BitmapBuffer *dc);
+    void drawHewBar(BitmapBuffer *dc);
     void drawGrid(BitmapBuffer *dc);
-    void drawColor(BitmapBuffer *dc);
+    void drawColorBox(BitmapBuffer *dc);
     void setRGB();
     std::function<void (uint32_t rgb)> setValue;
 };
@@ -153,39 +173,6 @@ class ColorSquare : public FormField
     uint32_t g = 0;
     uint32_t b = 0;
     std::function<void (ColorEntry colorEntry)> setValue;
-};
-
-// a list of color theme names with their color to the right
-class ColorList : public ListBase
-{
- public:
-  ColorList(Window *parent, const rect_t &rect, std::vector<ColorEntry> colors,
-            std::function<void(uint32_t)> setValue,
-            WindowFlags windowFlags = 0, LcdFlags lcdFlags = 0);
-
-  inline ColorEntry getSelectedColor()
-  {
-    return colorList[selected];
-  }
-
-
-  bool onTouchEnd(coord_t x, coord_t y) override;
-
-  std::vector<std::string> getColorListNames(std::vector<ColorEntry> colors);
-
-  inline void setColorList(std::vector<ColorEntry> colorList)
-  {
-    this->colorList = colorList;
-    ListBase::setNames(getColorListNames(colorList));
-    invalidate();
-  }
-
-  void drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, LcdFlags lcdFlags) override;
-
- protected:
-  std::vector<ColorEntry> colorList;
-  ThemePersistance *tp;
-  void createColorEditorPopup();
 };
 
 
