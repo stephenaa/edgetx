@@ -337,6 +337,8 @@ void ThemePersistance::scanForThemes()
 
 void ThemePersistance::loadDefaultTheme()
 {
+  refresh();
+
   FIL file;
   FRESULT status = f_open(&file, SELECTED_THEME_FILE, FA_READ);
   if (status != FR_OK) return;
@@ -346,7 +348,6 @@ void ThemePersistance::loadDefaultTheme()
 
   status = f_read(&file, line, 256, &len);
   if (status == FR_OK) {
-    refresh();
 
     line[len] = '\0';
 
