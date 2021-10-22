@@ -412,7 +412,7 @@ void ThemeSetupPage::build(FormWindow *window)
 
     // you cant edit the default theme
     if (listBox->getSelected() != 0) {
-      menu->addLine("Edit Theme",
+      menu->addLine(STR_EDIT,
         [=] () {
           auto theme = tp->getThemeByIndex(currentTheme);
           if (theme == nullptr) return;
@@ -439,7 +439,7 @@ void ThemeSetupPage::build(FormWindow *window)
       });
     }
     menu->addLine("New", [=] () {});
-    menu->addLine("Set Active", [=] () {
+    menu->addLine("Activate", [=] () {
       tp->applyTheme(listBox->getSelected());
       tp->setDefaultTheme(listBox->getSelected());
       nameText->setTextFlags(COLOR_THEME_PRIMARY1);
@@ -448,7 +448,7 @@ void ThemeSetupPage::build(FormWindow *window)
       authorLabel->setTextFlags(COLOR_THEME_PRIMARY1);
     });
     if (listBox->getSelected() != 0) {
-      menu->addLine("Delete", [=] () {});
+      menu->addLine(STR_DELETE, [=] () {});
     }
   });
 

@@ -415,7 +415,7 @@ void ScreenUserInterfacePage::build(FormWindow * window)
     return 0;
   };
 
-  new TextButton(window, grid.getFieldSlot(3, 2), "Edit", launchEditor, BUTTON_BACKGROUND | OPAQUE, COLOR_THEME_PRIMARY2);
+  new TextButton(window, grid.getFieldSlot(3, 2), STR_EDIT, launchEditor, BUTTON_BACKGROUND | OPAQUE, COLOR_THEME_PRIMARY2);
   
   bool bNarrowScreen = LCD_W < LCD_H;
   if (bNarrowScreen)

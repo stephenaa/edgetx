@@ -62,7 +62,7 @@ class ColorEditorContent : public ModalWindowContent
     NumberEdit *gEdit;
     NumberEdit *bEdit;
 
-    void drawHewBar(BitmapBuffer *dc);
+    void drawHueBar(BitmapBuffer *dc);
     void drawGrid(BitmapBuffer *dc);
     void drawColorBox(BitmapBuffer *dc);
     void setRGB();

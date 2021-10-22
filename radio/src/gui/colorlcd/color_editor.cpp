@@ -246,7 +246,7 @@ void ColorEditorContent::onEvent(event_t event)
 #endif
 
 
-void ColorEditorContent::drawHewBar(BitmapBuffer *dc)
+void ColorEditorContent::drawHueBar(BitmapBuffer *dc)
 {
   for (int i = 0; i < MAX_HUE; i++) {
     auto rgb = HSVtoRGB(i, MAX_SATURATION, MAX_BRIGHTNESS);
@@ -286,7 +286,7 @@ void ColorEditorContent::drawColorBox(BitmapBuffer *dc)
 void ColorEditorContent::paint(BitmapBuffer *dc)
 {
   ModalWindowContent::paint(dc);
-  drawHewBar(dc);
+  drawHueBar(dc);
   drawGrid(dc);
   drawColorBox(dc);
 }
