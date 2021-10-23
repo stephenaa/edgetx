@@ -251,7 +251,7 @@ class ThemeDetailsDialog: public Dialog
 {
   public:
     ThemeDetailsDialog(Window *parent, ThemeFile theme, std::function<void (ThemeFile theme)> saveHandler = nullptr) :
-      Dialog(parent, "Edit Details", detailsDialogRect),
+      Dialog(parent, STR_EDIT_THEME_DETAILS, detailsDialogRect),
       theme(theme),
       saveHandler(saveHandler)
     {
@@ -259,26 +259,26 @@ class ThemeDetailsDialog: public Dialog
       grid.setLabelWidth(labelWidth);
       grid.spacer(8);
 
-      new StaticText(&content->form, grid.getLabelSlot(), "Name", 0, COLOR_THEME_PRIMARY1);
+      new StaticText(&content->form, grid.getLabelSlot(), STR_NAME, 0, COLOR_THEME_PRIMARY1);
       new TextEdit(&content->form, grid.getFieldSlot(), this->theme.getName(), NAME_LENGTH);
       grid.nextLine();
-      new StaticText(&content->form, grid.getLabelSlot(), "Author", 0, COLOR_THEME_PRIMARY1);
+      new StaticText(&content->form, grid.getLabelSlot(), STR_AUTHOR, 0, COLOR_THEME_PRIMARY1);
       new TextEdit(&content->form, grid.getFieldSlot(), this->theme.getAuthor(), AUTHOR_LENGTH);
       grid.nextLine();
-      new StaticText(&content->form, grid.getLineSlot(), "Description", 0, COLOR_THEME_PRIMARY1);
+      new StaticText(&content->form, grid.getLineSlot(), STR_DESCRIPTION, 0, COLOR_THEME_PRIMARY1);
       grid.nextLine();
       new TextEdit(&content->form, grid.getLineSlot(), this->theme.getInfo(), INFO_LENGTH);
       grid.nextLine();
 
       rect_t r = {detailsDialogRect.w - (BUTTON_WIDTH + 5), grid.getWindowHeight() + 5, BUTTON_WIDTH, BUTTON_HEIGHT };
-      new TextButton(&content->form, r, "Save", [=] () {
+      new TextButton(&content->form, r, STR_SAVE, [=] () {
         if (saveHandler != nullptr)
           saveHandler(this->theme);
         deleteLater();
         return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
       r.x -= (BUTTON_WIDTH + 5);
-      new TextButton(&content->form, r, "Cancel", [=] () {
+      new TextButton(&content->form, r, STR_CANCEL, [=] () {
         deleteLater();
         return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
@@ -312,7 +312,7 @@ class ThemeEditPage : public Page
       new StaticText(window,
                      {PAGE_TITLE_LEFT, PAGE_TITLE_TOP, LCD_W - PAGE_TITLE_LEFT,
                       PAGE_LINE_HEIGHT},
-                     "Edit Theme", 0, COLOR_THEME_PRIMARY2 | flags);
+                     STR_EDIT_THEME, 0, COLOR_THEME_PRIMARY2 | flags);
       themeName = new StaticText(window,
                      {PAGE_TITLE_LEFT, PAGE_TITLE_TOP + PAGE_LINE_HEIGHT,
                       LCD_W - PAGE_TITLE_LEFT, PAGE_LINE_HEIGHT},
@@ -320,14 +320,14 @@ class ThemeEditPage : public Page
 
       // save and cancel
       rect_t r = {LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
-      saveButton = new TextButton(window, r, "Save", [=] () {
+      saveButton = new TextButton(window, r, STR_SAVE, [=] () {
         if (saveHandler != nullptr)
           saveHandler(this->theme);
         deleteLater();
         return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
       r.x -= (BUTTON_WIDTH + 5);
-      detailButton = new TextButton(window, r, "Details", [=] () {
+      detailButton = new TextButton(window, r, STR_DETAILS, [=] () {
         new ThemeDetailsDialog(page, theme, [=] (ThemeFile t) {
           theme.setAuthor(t.getAuthor());
           theme.setInfo(t.getInfo());
@@ -375,7 +375,7 @@ class ThemeEditPage : public Page
     TextButton *detailButton;
 };
 
-ThemeSetupPage::ThemeSetupPage() : PageTab("Theme Editor", ICON_MODEL_NOTES) {}
+ThemeSetupPage::ThemeSetupPage() : PageTab(STR_THEME_EDITOR, ICON_MODEL_NOTES) {}
 
 void ThemeSetupPage::build(FormWindow *window)
 {
@@ -406,7 +406,7 @@ void ThemeSetupPage::build(FormWindow *window)
         }
         currentTheme = value;
       });
-  listBox->setTitle("Themes");
+  listBox->setTitle(STR_THEME + std::string("s"));
   listBox->setLongPressHandler([=] (event_t event) {
     auto menu = new Menu(window,false);
 
@@ -438,8 +438,8 @@ void ThemeSetupPage::build(FormWindow *window)
             });
       });
     }
-    menu->addLine("New", [=] () {});
-    menu->addLine("Activate", [=] () {
+    menu->addLine(STR_NEW, [=] () {});
+    menu->addLine(STR_ACTIVATE, [=] () {
       tp->applyTheme(listBox->getSelected());
       tp->setDefaultTheme(listBox->getSelected());
       nameText->setTextFlags(COLOR_THEME_PRIMARY1);
@@ -472,13 +472,13 @@ void ThemeSetupPage::build(FormWindow *window)
 
   r.h = 22;
   r.y += 120;
-  nameLabel = new StaticText(window, r, "Name:", 0, COLOR_THEME_PRIMARY1);
+  nameLabel = new StaticText(window, r, STR_NAME, 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
   nameText = new StaticText(window, r, theme != nullptr ? theme->getName() : "", 0, COLOR_THEME_PRIMARY1);
 
   r.y += 22;
   r.x -= 80;
-  authorLabel = new StaticText(window, r, "Author:", 0, COLOR_THEME_PRIMARY1);
+  authorLabel = new StaticText(window, r, STR_AUTHOR, 0, COLOR_THEME_PRIMARY1);
   r.x += 80;
   authorText = new StaticText(window, r, theme != nullptr ? theme->getAuthor() : "", 0, COLOR_THEME_PRIMARY1);
 }

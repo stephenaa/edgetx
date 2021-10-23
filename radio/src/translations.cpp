@@ -937,6 +937,21 @@ const char STR_AUTH_FAILURE[] = TR_AUTH_FAILURE;
 const char STR_PROTOCOL[] = TR_PROTOCOL;
 const char STR_RACING_MODE[] = TR_RACING_MODE;
 
+const char STR_NEW[] = TR_NEW;
+const char STR_ACTIVATE[] = TR_ACTIVATE;
+const char STR_RED[] = TR_RED;
+const char STR_GREEN[] = TR_GREEN;
+const char STR_BLUE[] = TR_BLUE;
+const char STR_COLOR_PICKER[] = TR_COLOR_PICKER;
+const char STR_EDIT_THEME_DETAILS[] = TR_EDIT_THEME_DETAILS;
+const char STR_AUTHOR[] = TR_AUTHOR;
+const char STR_DESCRIPTION[] = TR_DESCRIPTION;
+const char STR_SAVE[] = TR_SAVE;
+const char STR_CANCEL[] = TR_CANCEL;
+const char STR_EDIT_THEME[] = TR_EDIT_THEME;
+const char STR_DETAILS[] = TR_DETAILS;
+const char STR_THEME_EDITOR[] = TR_THEME_EDITOR;
+
 #if defined(PCBNV14)
 const char STR_RFPOWER_AFHDS2[] = TR_RFPOWER_AFHDS2;
 #endif

@@ -136,15 +136,15 @@ ColorEditorContent::ColorEditorContent(ModalWindow *window, const rect_t rect, u
   rect_t rText = {COLOR_BOX_LEFT, 60, 50, 20};
   rect_t rNumber = {COLOR_BOX_LEFT + 60, 60, 40, 20};
 
-  new StaticText(this, rText, "Red", 0, COLOR_THEME_PRIMARY1);
+  new StaticText(this, rText, STR_RED, 0, COLOR_THEME_PRIMARY1);
   rText.y += 23;
   rEdit = new NumberEdit(this, rNumber, 0, 255, [=] () { return r; }, [=] (int value) { r = value; });
   rNumber.y += 23;
-  new StaticText(this, rText, "Green", 0, COLOR_THEME_PRIMARY1);
+  new StaticText(this, rText, STR_GREEN, 0, COLOR_THEME_PRIMARY1);
   rText.y += 23;
   gEdit = new NumberEdit(this, rNumber, 0, 255, [=] () { return g; }, [=] (int value) { g = value; });
   rNumber.y += 23;
-  new StaticText(this, rText, "Blue", 0, COLOR_THEME_PRIMARY1);
+  new StaticText(this, rText, STR_BLUE, 0, COLOR_THEME_PRIMARY1);
   bEdit = new NumberEdit(this, rNumber, 0, 255, [=] () { return b; }, [=] (int value) { b = value; });
 
   invalidate();
@@ -308,7 +308,7 @@ ColorEditorPopup::ColorEditorPopup(Window *window, std::function<uint32_t ()> ge
 
   content->setFocus();
   bringToTop();
-  content->setTitle("Color Picker");
+  content->setTitle(STR_COLOR_PICKER);
   killAllEvents();
 }
 

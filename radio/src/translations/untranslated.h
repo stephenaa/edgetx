@@ -331,3 +331,18 @@
 #define CHAR_CHANNEL   STR_CHAR_CHANNEL[0]
 #define CHAR_TELEMETRY STR_CHAR_TELEMETRY[0]
 #define CHAR_LUA       STR_CHAR_LUA[0]
+
+#define TR_NEW "New"
+#define TR_ACTIVATE "Activate"
+#define TR_RED "Red"
+#define TR_BLUE "Blue"
+#define TR_GREEN "Green"
+#define TR_COLOR_PICKER "Color Picker"
+#define TR_EDIT_THEME_DETAILS "Edit Theme Details"
+#define TR_AUTHOR "Author"
+#define TR_DESCRIPTION "Description"
+#define TR_SAVE "Save"
+#define TR_CANCEL "Cancel"
+#define TR_EDIT_THEME "Edit Theme"
+#define TR_DETAILS "Details"
+#define TR_THEME_EDITOR "Theme Editor"
