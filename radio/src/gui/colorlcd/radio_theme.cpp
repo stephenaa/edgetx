@@ -55,7 +55,7 @@ class ColorMaintainer
     }
 
 
-    void applyColorList()
+    void applyColorValues()
     {
       // save old values;
       for (auto i = 0; i < COLOR_COUNT; i++) {
@@ -89,7 +89,7 @@ class ThemedTextEdit : public TextEdit
 
   void paint(BitmapBuffer *dc) override
   {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
       TextEdit::paint(dc);
       colorMaintainer.restoreColorValues();
   }
@@ -102,7 +102,7 @@ class ThemedStaticText : public StaticText
 
   void paint(BitmapBuffer *dc) override
   {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
       setTextFlags(COLOR_THEME_PRIMARY1);
       StaticText::paint(dc);
       colorMaintainer.restoreColorValues();
@@ -120,7 +120,7 @@ class ThemedCheckBox : public CheckBox
     
     void paint(BitmapBuffer * dc) override
     {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
       CheckBox::paint(dc);
       colorMaintainer.restoreColorValues();
     }
@@ -134,7 +134,7 @@ class ThemedMainViewHorizontalTrim : public MainViewHorizontalTrim
     using MainViewHorizontalTrim::MainViewHorizontalTrim;
     void paint (BitmapBuffer *dc) override 
     {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
       MainViewHorizontalTrim::paint(dc);
       colorMaintainer.restoreColorValues();
     }
@@ -146,7 +146,7 @@ class ThemedMainViewHorizontalSlider: public MainViewHorizontalSlider
     using MainViewHorizontalSlider::MainViewHorizontalSlider;
     void paint (BitmapBuffer *dc) override
     {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
       MainViewHorizontalSlider::paint(dc);
       colorMaintainer.restoreColorValues();
     }
@@ -198,7 +198,7 @@ class PreviewWindow : public FormGroup
 
     void paint(BitmapBuffer *dc) override
     {
-      colorMaintainer.applyColorList();
+      colorMaintainer.applyColorValues();
 
       // background
       dc->clear(COLOR_THEME_SECONDARY3);
@@ -417,16 +417,16 @@ void ThemeSetupPage::build(FormWindow *window)
           auto theme = tp->getThemeByIndex(currentTheme);
           if (theme == nullptr) return;
           
-          new ThemeEditPage(*tp->getThemeByIndex(currentTheme), 
+          new ThemeEditPage(*theme, 
             [=](ThemeFile &theme) {
               auto t = tp->getThemeByIndex(currentTheme);
               if (t != nullptr) {
                 t->setName(theme.getName());
                 t->setAuthor(theme.getAuthor());
                 t->setInfo(theme.getInfo());
-                int n = 0;
 
                 // update the colors that were edited
+                int n = 0;
                 for (auto color : theme.getColorList()) {
                   t->setColorByIndex(n, color.colorValue);
                   n++;
