@@ -142,7 +142,7 @@ class ThemePersistance
     void loadDefaultTheme();
     void setDefaultTheme(int index);
     void deleteDefaultTheme();
-    char **getColorNames();
+    static char **getColorNames();
 
 
     std::vector<std::string> getNames()

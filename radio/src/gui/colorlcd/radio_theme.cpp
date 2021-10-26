@@ -297,8 +297,9 @@ class ThemeDetailsDialog: public Dialog
 class ColorEditPage : public Page
 {
 public:
-  ColorEditPage(ThemeFile theme) :
+  ColorEditPage(ThemeFile *theme, LcdColorIndex indexOfColor) :
     Page(ICON_MODEL_NOTES),
+    _indexOfColor(indexOfColor),
     _theme(theme)
   {
     buildBody(&body); // this must be called first
@@ -306,7 +307,8 @@ public:
   }
 
 protected:
-  ThemeFile   _theme;
+  LcdColorIndex _indexOfColor;
+  ThemeFile  *_theme;
   TextButton *saveButton;
   TextButton *cancelButton;
   ColorEditor *colorEditor;
@@ -314,13 +316,24 @@ protected:
 
   void buildBody(FormWindow* window)
   {
-    colorEditor = new ColorEditor(window, {0, 0, 150, COLOR_LIST_HEIGHT},
-      RGB(255,0,0),
+    rect_t r;
+    r = { 0, 4, COLOR_LIST_WIDTH, COLOR_LIST_HEIGHT };
+    colorEditor = new ColorEditor(window, r,  _theme->getColorEntryByIndex(_indexOfColor)->colorValue,
       [=](uint32_t rgb) {
+        _theme->setColor(_indexOfColor, rgb);
+        if (previewWindow != nullptr) {
+          colorMaintainer.setColorList(_theme->getColorList());
+          previewWindow->invalidate();
+        }
       });
 
-    previewWindow = new PreviewWindow(window, {150, 0, LCD_W - 150, COLOR_LIST_HEIGHT }, 
-                                      _theme.getColorList());
+    if (LCD_W > LCD_H) {
+      r = { COLOR_LIST_WIDTH + MARGIN_WIDTH, 4, LCD_W - COLOR_LIST_WIDTH - MARGIN_WIDTH * 2, COLOR_LIST_HEIGHT };
+    }
+    else {
+      r = { 0, LEFT_LIST_HEIGHT + 4,  LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT - 4 };
+    }
+    previewWindow = new PreviewWindow(window, r, _theme->getColorList());
   }
 
   void buildHead(PageHeader* window)
@@ -338,7 +351,7 @@ protected:
     new StaticText(window,
       { PAGE_TITLE_LEFT, PAGE_TITLE_TOP + PAGE_LINE_HEIGHT,
        LCD_W - PAGE_TITLE_LEFT, PAGE_LINE_HEIGHT },
-      "PRIMARY1", 0, COLOR_THEME_PRIMARY2 | flags);
+      ThemePersistance::getColorNames()[(int)_indexOfColor], 0, COLOR_THEME_PRIMARY2 | flags);
 
     // save and cancel
     rect_t r = { LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
@@ -360,7 +373,7 @@ class ThemeEditPage : public Page
   public:
     explicit ThemeEditPage(ThemeFile theme, std::function<void (ThemeFile &theme)> saveHandler = nullptr) :
       Page(ICON_MODEL_NOTES),
-      theme(theme),
+      _theme(theme),
       page(this),
       saveHandler(std::move(saveHandler))
     {
@@ -383,25 +396,25 @@ class ThemeEditPage : public Page
       themeName = new StaticText(window,
                      {PAGE_TITLE_LEFT, PAGE_TITLE_TOP + PAGE_LINE_HEIGHT,
                       LCD_W - PAGE_TITLE_LEFT, PAGE_LINE_HEIGHT},
-                     theme.getName(), 0, COLOR_THEME_PRIMARY2 | flags);
+                     _theme.getName(), 0, COLOR_THEME_PRIMARY2 | flags);
 
       // save and cancel
       rect_t r = {LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
       saveButton = new TextButton(window, r, STR_SAVE, [=] () {
         if (saveHandler != nullptr)
-          saveHandler(this->theme);
+          saveHandler(_theme);
         deleteLater();
         return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
       r.x -= (BUTTON_WIDTH + 5);
       detailButton = new TextButton(window, r, STR_DETAILS, [=] () {
-        new ThemeDetailsDialog(page, theme, [=] (ThemeFile t) {
-          theme.setAuthor(t.getAuthor());
-          theme.setInfo(t.getInfo());
-          theme.setName(t.getName());
+        new ThemeDetailsDialog(page, _theme, [=] (ThemeFile t) {
+          _theme.setAuthor(t.getAuthor());
+          _theme.setInfo(t.getInfo());
+          _theme.setName(t.getName());
 
           // update the theme name
-          themeName->setText(theme.getName());
+          themeName->setText(_theme.getName());
         });
         return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
@@ -411,20 +424,20 @@ class ThemeEditPage : public Page
       window->link(saveButton, cList);
     }
 
-
     void buildBody(FormGroup *window)
     {
       rect_t r = { 0, 4, COLOR_LIST_WIDTH, COLOR_LIST_HEIGHT};
-      cList = new ColorList(window, r, theme.getColorList(), 
+      cList = new ColorList(window, r, _theme.getColorList(), 
         [=] (uint32_t value) {
           if (previewWindow) {
-            theme.setColorByIndex(value, cList->getSelectedColor().colorValue);
-            colorMaintainer.setColorList(theme.getColorList());
+            _theme.setColorByIndex(value, cList->getSelectedColor().colorValue);
+            colorMaintainer.setColorList(_theme.getColorList());
             previewWindow->invalidate();
           }
         });
       cList->setLongPressHandler([=] (event_t event) {
-        new ColorEditPage(theme);
+        auto colorEntry = cList->getSelectedColor();
+        new ColorEditPage(&_theme, colorEntry.colorNumber);
       });
 
       if (LCD_W > LCD_H) {
@@ -432,11 +445,11 @@ class ThemeEditPage : public Page
       } else {
         r = { 0, LEFT_LIST_HEIGHT + 4,  LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT - 4};
       }
-      previewWindow = new PreviewWindow(window, r, theme.getColorList());
+      previewWindow = new PreviewWindow(window, r, _theme.getColorList());
     }
 
   protected:
-    ThemeFile theme;
+    ThemeFile _theme;
     Page *page;
     std::function<void(ThemeFile &theme)> saveHandler = nullptr;
     PreviewWindow *previewWindow = nullptr;
@@ -445,7 +458,6 @@ class ThemeEditPage : public Page
     TextButton *saveButton;
     TextButton *detailButton;
 };
-
 
 ThemeSetupPage::ThemeSetupPage() : PageTab(STR_THEME_EDITOR, ICON_MODEL_NOTES) {}
 

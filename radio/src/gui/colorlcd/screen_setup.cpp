@@ -303,8 +303,6 @@ class ThemeEditorPage : public Page
       FormGridLayout grid;
       grid.spacer(8);
 
-      ThemePersistance *tp = ThemePersistance::instance();
-
       new StaticText(window, grid.getLabelSlot(), "Name", 0, COLOR_THEME_PRIMARY1);
       new TextEdit(window, grid.getFieldSlot(), theme->getName(), NAME_LENGTH);
       grid.nextLine();
@@ -321,7 +319,7 @@ class ThemeEditorPage : public Page
       grid.nextLine();
       grid.spacer(10);
 
-      char **colorNames = tp->getColorNames();
+      char **colorNames = ThemePersistance::getColorNames();
       for (int i = 0; i < COLOR_COUNT; i++) {
         char * name = colorNames[i];
         new StaticText(window, grid.getLabelSlot(), name, 0, COLOR_THEME_PRIMARY1);

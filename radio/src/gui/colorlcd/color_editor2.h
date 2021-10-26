@@ -27,19 +27,62 @@
 #include "theme_manager.h"
 #include "listbox.h"
 
-constexpr int BAR_WIDTH          = 20;
-constexpr int BAR_MARGIN         = 2;
-constexpr int MAX_BRIGHTNESS     = 100;
-constexpr int MAX_BARS           = 3;
-constexpr int BAR_LEFT           = 60;
-
-struct BarStruct
+constexpr int MAX_BARS = 3;
+class Bar
 {
-  bool sliding;
-  int leftPos;
-  int maxValue;    
-  int value;
-  StaticText *barText;
+  public:
+    bool sliding;
+    int leftPos;
+    int maxValue;
+    int value;
+    StaticText* barText;
+};
+
+class ColorType
+{
+  public:
+    ColorType()
+    {
+      for (auto i = 0; i < MAX_BARS; i++) {
+        barInfo[i].barText = nullptr;
+      }
+    }
+    ~ColorType()
+    {
+      for (auto i = 0; i < MAX_BARS; i++) {
+        if (barInfo[i].barText != nullptr) {
+          barInfo[i].barText->deleteLater();
+        }
+      }
+    };
+    Bar barInfo[MAX_BARS];
+    virtual void paint(BitmapBuffer *dc) {}
+    virtual uint32_t getBarValue(int bar, coord_t pos) {return 0;}
+    virtual uint32_t getRGB() {return 0;}
+};
+
+class HSVColorType : public ColorType
+{
+  public:
+    HSVColorType(FormGroup *window, uint32_t color);
+    uint32_t getBarValue(int bar, coord_t pos) override;
+    uint32_t getRGB() override;
+
+    void drawHueBar(BitmapBuffer* dc);
+    void drawSaturationBar(BitmapBuffer* dc);
+    void drawBrightnessBar(BitmapBuffer* dc);
+    void paint(BitmapBuffer* dc) override;
+};
+
+class RGBColorType : public ColorType
+{
+  public:
+
+    RGBColorType(FormGroup *window, uint32_t color);
+    uint32_t getBarValue(int bar, coord_t pos) override;
+    uint32_t getRGB() override;
+
+    void paint(BitmapBuffer* dc) override;
 };
 
 // the content page of the ColorEditorPupup
@@ -68,11 +111,8 @@ class ColorEditor : public FormGroup
     void paint(BitmapBuffer *dc) override;
 
   protected:
-    BarStruct barInfo[MAX_BARS];
+    ColorType *colorType = nullptr;
     TextButton *firstButton = nullptr, *lastButton = nullptr;
-    void drawHueBar(BitmapBuffer *dc);
-    void drawSaturationBar(BitmapBuffer *dc);
-    void drawBrightnessBar(BitmapBuffer *dc);
     void drawColorBox(BitmapBuffer *dc);
     void drawFocusBox(BitmapBuffer *dc);
     void setRGB();

@@ -51,7 +51,7 @@ void ColorList::createColorEditorPopup()
 std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> colors)
 {
   std::vector<std::string> names;
-  char **colorNames = tp->getColorNames();
+  char **colorNames = ThemePersistance::getColorNames();
   for (auto color : colors) {
     names.emplace_back(colorNames[color.colorNumber]);
   }
