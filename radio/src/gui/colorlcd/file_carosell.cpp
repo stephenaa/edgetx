@@ -20,42 +20,72 @@
  */
 #include "file_carosell.h"
 
+extern inline tmr10ms_t getTicks()
+{
+  return g_tmr10ms;
+}
+
+#define PAGE_INTERVAL ((1000 / 10) * 2)
+
+
 FileCarosell::FileCarosell(Window *parent, const rect_t &rect,
                            std::vector<std::string> fileNames, FormField *nextCtrl) :
     FormGroup(parent, rect, NO_FOCUS | FORM_NO_BORDER),
     _fileNames(fileNames),
-    fp(new FilePreview(parent, {rect.x + 20, rect.y, rect.w - 40, rect.h - 40},
-                       false))
+    fp(new FilePreview(parent, {rect.x, rect.y, rect.w, rect.h}, false))
 {
-  auto tbPrev = new TextButton(
-      this, {5, rect.h / 2 - 20, 20, 30}, "<",
-      [=]() {
-        int newSelected = selected - 1;
-        if (newSelected < 0) newSelected = _fileNames.size() - 1;
-        setSelected(newSelected);
-        return 0;
-      },
-      BUTTON_BACKGROUND, COLOR_THEME_PRIMARY1);
-  auto tbNext = new TextButton(
-      this, {rect.w - 30, rect.h / 2 - 20, 20, 30}, ">",
-      [=]() {
-        int newSelected = 0;
-        if (_fileNames.size() > 0) {
-          newSelected = (selected + 1) % _fileNames.size();
-        }
+  timer = getTicks();
 
-        setSelected(newSelected);
-        return 0;
-      },
-      BUTTON_BACKGROUND, COLOR_THEME_PRIMARY1);
+  // auto tbPrev = new TextButton(
+  //     this, {5, rect.h / 2 - 20, 20, 30}, "<",
+  //     [=]() {
+  //       int newSelected = selected - 1;
+  //       if (newSelected < 0) newSelected = _fileNames.size() - 1;
+  //       setSelected(newSelected);
+  //       return 0;
+  //     },
+  //     BUTTON_BACKGROUND, COLOR_THEME_PRIMARY1);
+  // auto tbNext = new TextButton(
+  //     this, {rect.w - 30, rect.h / 2 - 20, 20, 30}, ">",
+  //     [=]() {
+  //       int newSelected = 0;
+  //       if (_fileNames.size() > 0) {
+  //         newSelected = (selected + 1) % _fileNames.size();
+  //       }
+
+  //       setSelected(newSelected);
+  //       return 0;
+  //     },
+  //     BUTTON_BACKGROUND, COLOR_THEME_PRIMARY1);
 
   setSelected(0);
 
-  tbPrev->link(tbNext, nextCtrl);
-  tbNext->link(nextCtrl, tbPrev);
-  setFocusHandler([=] (bool focus) {
-    if (focus) {
-      (*getChildren().begin())->setFocus();
-    }
-  });
+  // tbPrev->link(tbNext, nextCtrl);
+  // tbNext->link(nextCtrl, tbPrev);
+  // setFocusHandler([=] (bool focus) {
+  //   if (focus) {
+  //     (*getChildren().begin())->setFocus();
+  //   }
+  // });
+}
+
+  void FileCarosell::setFileNames(std::vector<std::string> fileNames)
+  {
+    _fileNames = fileNames;
+    selected = -1;
+    setSelected(0);
+    timer = getTicks();
+  }
+
+
+void FileCarosell::checkEvents()
+{
+  FormGroup::checkEvents();
+
+  uint32_t newTicks = getTicks();
+  if (newTicks - timer > PAGE_INTERVAL) {
+    int newSelected = (selected + 1) % _fileNames.size();
+    setSelected(newSelected);
+    timer = newTicks;
+  }
 }

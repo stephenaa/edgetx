@@ -332,8 +332,8 @@
 #define CHAR_TELEMETRY STR_CHAR_TELEMETRY[0]
 #define CHAR_LUA       STR_CHAR_LUA[0]
 
-#define TR_NEW "New"
-#define TR_ACTIVATE "Activate"
+#define TR_NEW "Create New"
+#define TR_ACTIVATE "Set Active"
 #define TR_RED "Red"
 #define TR_BLUE "Blue"
 #define TR_GREEN "Green"
@@ -343,6 +343,6 @@
 #define TR_DESCRIPTION "Description"
 #define TR_SAVE "Save"
 #define TR_CANCEL "Cancel"
-#define TR_EDIT_THEME "Edit Theme"
+#define TR_EDIT_THEME "EDIT THEME"
 #define TR_DETAILS "Details"
-#define TR_THEME_EDITOR "Theme Editor"
+#define TR_THEME_EDITOR "THEMES"

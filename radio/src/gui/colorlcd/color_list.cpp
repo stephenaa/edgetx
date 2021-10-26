@@ -20,6 +20,7 @@
  */
 #include "color_list.h"
 #include "color_editor.h"
+#include "color_editor2.h"
 
 ColorList::ColorList(
     Window *parent, const rect_t &rect, std::vector<ColorEntry> colors,
@@ -30,17 +31,16 @@ ColorList::ColorList(
     tp(ThemePersistance::instance())
 {
   setSelected(0);
-  setLongPressHandler([=] (event_t event) {
-    createColorEditorPopup();
-  });
+  // setLongPressHandler([=] (event_t event) {
+  //   createColorEditorPopup();
+  // });
+  setEditMode(true);
 }
 
 void ColorList::createColorEditorPopup()
 {
-  new ColorEditorPopup(this, 
-    [=] () {
-      return colorList[selected].colorValue;
-    },
+  new ColorEditor(static_cast<FormGroup *>(this->parent), this->rect, 
+    colorList[selected].colorValue, 
     [=] (uint32_t rgb) {
       colorList[selected].colorValue = rgb;
       _setValue(selected);
@@ -64,9 +64,9 @@ bool ColorList::onTouchEnd(coord_t x, coord_t y)
   ListBase::onTouchEnd(x, y);
   
   int selY = selected * lineHeight;
-  if (x > rect.w - 22 && x < rect.w - 5 && y > selY && y < selY + lineHeight - 6) {
-    createColorEditorPopup();
-  }
+  // if (x > rect.w - 22 && x < rect.w - 5 && y > selY && y < selY + lineHeight - 6) {
+  //   createColorEditorPopup();
+  // }
 
   return true;
 }

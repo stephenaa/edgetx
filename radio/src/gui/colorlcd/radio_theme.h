@@ -40,18 +40,24 @@ class ThemeColorPreview: public FormField
 
     void paint(BitmapBuffer *dc) override
     {
-      int totalNecessaryWidth = colorList.size() * (boxWidth + 2);
-      int x = (rect.w - totalNecessaryWidth) / 2;
+      int totalNessessarySpace = colorList.size() * (boxWidth + 2);
+      int axis = rect.w > rect.h ? rect.w : rect.h;
+      axis = (axis - totalNessessarySpace) / 2;
       for (auto color: colorList) {
-        dc->drawSolidFilledRect(x, 0, boxWidth, boxWidth, COLOR2FLAGS(color.colorValue));
-        dc->drawSolidRect(x, 0, boxWidth, boxWidth, 1, COLOR2FLAGS(BLACK));
-        x += boxWidth + 2;
+        if (rect.w > rect.h) {  
+          dc->drawSolidFilledRect(axis, 0, boxWidth, boxWidth, COLOR2FLAGS(color.colorValue));
+          dc->drawSolidRect(axis, 0, boxWidth, boxWidth, 1, COLOR2FLAGS(BLACK));
+        } else {
+          dc->drawSolidFilledRect(0, axis, boxWidth, boxWidth, COLOR2FLAGS(color.colorValue));
+          dc->drawSolidRect(0, axis, boxWidth, boxWidth, 1, COLOR2FLAGS(BLACK));
+        }
+        axis += boxWidth + 2;
       }
     }
 
   protected:
     std::vector<ColorEntry> colorList;
-    int boxWidth = 18;
+    int boxWidth = 15;
 };
 
 

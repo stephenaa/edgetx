@@ -21,6 +21,7 @@ set(GUI_SRC
   theme.cpp
   theme_manager.cpp
   color_editor.cpp
+  color_editor2.cpp
   color_list.cpp
   file_carosell.cpp
   listbox.cpp

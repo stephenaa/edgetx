@@ -40,15 +40,12 @@ class FileCarosell : public FormGroup
 
   }
 
-  inline void setFileNames(std::vector<std::string> fileNames)
-  {
-    _fileNames = fileNames;
-    selected = -1;
-    setSelected(0);
-  }
+  void setFileNames(std::vector<std::string> fileNames);
+  void checkEvents() override;
 
  protected:
   int selected = -1;
   std::vector<std::string> _fileNames;
   FilePreview *fp;
+  uint32_t timer;
 };
