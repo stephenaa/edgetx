@@ -47,7 +47,7 @@ class ColorType
         barInfo[i].barText = nullptr;
       }
     }
-    ~ColorType()
+    virtual ~ColorType()
     {
       for (auto i = 0; i < MAX_BARS; i++) {
         if (barInfo[i].barText != nullptr) {
@@ -84,6 +84,19 @@ class RGBColorType : public ColorType
 
     void paint(BitmapBuffer* dc) override;
 };
+
+class PalletColorType : public ColorType
+{
+public:
+
+  PalletColorType(FormGroup* window, uint32_t color);
+  ~PalletColorType() override;
+  uint32_t getBarValue(int bar, coord_t pos) override;
+  uint32_t getRGB() override;
+
+  void paint(BitmapBuffer* dc) override;
+};
+
 
 // the content page of the ColorEditorPupup
 class ColorEditor : public FormGroup

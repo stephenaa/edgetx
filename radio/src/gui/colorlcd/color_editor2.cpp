@@ -144,7 +144,7 @@ uint32_t RGBColorType::getRGB()
   return RGB(barInfo[0].value, barInfo[1].value, barInfo[2].value);
 }
 
-char *RGBChars[] = {"R", "G", "B"};
+std::string RGBChars[3] = {"R", "G", "B"};
 
 void RGBColorType::paint(BitmapBuffer *dc)
 {
@@ -166,7 +166,7 @@ void RGBColorType::paint(BitmapBuffer *dc)
 
     auto scalledValue = ((float)barInfo[i].value / 255) * maxRange;
     dc->drawFilledCircle(barInfo[i].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + scalledValue, 5, COLOR2FLAGS(WHITE));
-    dc->drawText(barInfo[i].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, RGBChars[i], COLOR_THEME_PRIMARY1 | FONT(XS));
+    dc->drawText(barInfo[i].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, RGBChars[i].c_str(), COLOR_THEME_PRIMARY1 | FONT(XS));
   }
 }
 
@@ -185,6 +185,38 @@ RGBColorType::RGBColorType(FormGroup *window, uint32_t color)
     barInfo[i].barText = new StaticText(window, { left, BAR_TOP_MARGIN - 20, BAR_WIDTH, 16 },
       std::to_string(barInfo[i].value), 0, COLOR_THEME_PRIMARY1 | CENTERED | FONT(XS));
   }
+}
+
+
+PalletColorType::PalletColorType(FormGroup *window, uint32_t color)
+{
+  for (auto i = 0; i < MAX_BARS; i++) {
+    barInfo[i].barText = nullptr;
+  }
+}
+
+PalletColorType::~PalletColorType()
+{
+}
+
+void PalletColorType::paint(BitmapBuffer *dc)
+{
+  for (auto i = 0; i < 8; i++) {
+    for (auto j = 0; j < 15; j++) {
+      dc->drawSolidFilledRect(BAR_LEFT + (i * 11), BAR_TOP_MARGIN + (j * 11), 11, 11, COLOR2FLAGS(RGB(255,255,255)));
+      dc->drawSolidRect(BAR_LEFT + (i * 11), BAR_TOP_MARGIN + (j * 11), 11, 11, 1, COLOR2FLAGS(BLACK));
+    }
+  }
+}
+
+uint32_t PalletColorType::getRGB()
+{
+  return 0;
+}
+
+uint32_t PalletColorType::getBarValue(int bar, coord_t pos)
+{
+  return 0;
 }
 
 ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
@@ -220,7 +252,10 @@ ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
   a.y = a.y + BUTTON_HEIGHT + BUTTON_MARGIN;
   lastButton = new TextButton(this, a, "PAL", 
     [=] () {
-
+      if (colorType != nullptr) {
+        delete colorType;
+      }
+      colorType = new PalletColorType(this, color);
       return 0;
     }, 0, COLOR_THEME_PRIMARY1);
 
@@ -230,14 +265,16 @@ ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
 
   firstButton->setPreviousField(this);
   lastButton->setNextField(this);
-  lastButton->setFocus();
+  firstButton->setFocus();
 }
 
 void ColorEditor::setRGB()
 {
   _color = colorType->getRGB();
   for (auto i = 0; i < MAX_BARS; i++) {
-    colorType->barInfo[i].barText->setText(std::to_string(colorType->barInfo[i].value));
+    if (colorType->barInfo[i].barText != nullptr) {
+      colorType->barInfo[i].barText->setText(std::to_string(colorType->barInfo[i].value));
+    }
   }
 
   invalidate();

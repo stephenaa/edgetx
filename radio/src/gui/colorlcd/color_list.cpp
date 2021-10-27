@@ -59,18 +59,6 @@ std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> co
   return names;
 }
 
-bool ColorList::onTouchEnd(coord_t x, coord_t y)
-{
-  ListBase::onTouchEnd(x, y);
-  
-  int selY = selected * lineHeight;
-  // if (x > rect.w - 22 && x < rect.w - 5 && y > selY && y < selY + lineHeight - 6) {
-  //   createColorEditorPopup();
-  // }
-
-  return true;
-}
-
 void ColorList::drawLine(BitmapBuffer *dc, const rect_t &rect, uint32_t index, LcdFlags lcdFlags)
 {
   ListBase::drawLine(dc, rect, index, lcdFlags);

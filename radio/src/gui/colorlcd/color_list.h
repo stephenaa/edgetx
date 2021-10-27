@@ -40,9 +40,6 @@ class ColorList : public ListBase
     return colorList[selected];
   }
 
-
-  bool onTouchEnd(coord_t x, coord_t y) override;
-
   std::vector<std::string> getColorListNames(std::vector<ColorEntry> colors);
 
   inline void setColorList(std::vector<ColorEntry> colorList)

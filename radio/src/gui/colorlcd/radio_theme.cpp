@@ -298,7 +298,7 @@ class ColorEditPage : public Page
 {
 public:
   ColorEditPage(ThemeFile *theme, LcdColorIndex indexOfColor) :
-    Page(ICON_MODEL_NOTES),
+    Page(ICON_RADIO_EDIT_THEME),
     _indexOfColor(indexOfColor),
     _theme(theme)
   {
@@ -372,7 +372,7 @@ class ThemeEditPage : public Page
 {
   public:
     explicit ThemeEditPage(ThemeFile theme, std::function<void (ThemeFile &theme)> saveHandler = nullptr) :
-      Page(ICON_MODEL_NOTES),
+      Page(ICON_RADIO_EDIT_THEME),
       _theme(theme),
       page(this),
       saveHandler(std::move(saveHandler))
@@ -459,7 +459,7 @@ class ThemeEditPage : public Page
     TextButton *detailButton;
 };
 
-ThemeSetupPage::ThemeSetupPage() : PageTab(STR_THEME_EDITOR, ICON_MODEL_NOTES) {}
+ThemeSetupPage::ThemeSetupPage() : PageTab(STR_THEME_EDITOR, ICON_RADIO_EDIT_THEME) {}
 
 void ThemeSetupPage::build(FormWindow *window)
 {
