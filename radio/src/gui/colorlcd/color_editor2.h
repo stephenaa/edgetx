@@ -28,14 +28,17 @@
 #include "listbox.h"
 
 constexpr int MAX_BARS = 3;
+typedef std::function<uint32_t (int bar, int pos)> getRGBFromPos;
+
 class Bar
 {
   public:
-    bool sliding;
-    int leftPos;
-    int maxValue;
-    int value;
-    StaticText* barText;
+    bool sliding = false;
+    int leftPos = 0;
+    int maxValue = 0;
+    int value = 0;
+    StaticText* barText = nullptr;
+    bool invert = false;
 };
 
 class ColorType
@@ -55,10 +58,28 @@ class ColorType
         }
       }
     };
+
+    virtual int valueToScreen(int bar, int value)
+    {
+      int scaledValue = (((float)value / barInfo[bar].maxValue) * screenHeight);
+      if (barInfo[bar].invert)
+        scaledValue = screenHeight - scaledValue;
+
+      return scaledValue;
+    }
+    virtual int screenToValue(int bar, int pos)
+    {
+      int scaledValue = (((float)pos / screenHeight) * barInfo[bar].maxValue);
+      if (barInfo[bar].invert)
+        scaledValue = barInfo[bar].maxValue - scaledValue;
+      return scaledValue;
+    }
+
     Bar barInfo[MAX_BARS];
     virtual void paint(BitmapBuffer *dc) {}
     virtual uint32_t getBarValue(int bar, coord_t pos) {return 0;}
     virtual uint32_t getRGB() {return 0;}
+    int screenHeight;
 };
 
 class HSVColorType : public ColorType
@@ -67,10 +88,7 @@ class HSVColorType : public ColorType
     HSVColorType(FormGroup *window, uint32_t color);
     uint32_t getBarValue(int bar, coord_t pos) override;
     uint32_t getRGB() override;
-
-    void drawHueBar(BitmapBuffer* dc);
-    void drawSaturationBar(BitmapBuffer* dc);
-    void drawBrightnessBar(BitmapBuffer* dc);
+    void drawBar(BitmapBuffer *dc, int bar, getRGBFromPos getRGB);
     void paint(BitmapBuffer* dc) override;
 };
 
@@ -84,19 +102,6 @@ class RGBColorType : public ColorType
 
     void paint(BitmapBuffer* dc) override;
 };
-
-class PalletColorType : public ColorType
-{
-public:
-
-  PalletColorType(FormGroup* window, uint32_t color);
-  ~PalletColorType() override;
-  uint32_t getBarValue(int bar, coord_t pos) override;
-  uint32_t getRGB() override;
-
-  void paint(BitmapBuffer* dc) override;
-};
-
 
 // the content page of the ColorEditorPupup
 class ColorEditor : public FormGroup
@@ -126,6 +131,7 @@ class ColorEditor : public FormGroup
   protected:
     ColorType *colorType = nullptr;
     TextButton *firstButton = nullptr, *lastButton = nullptr;
+    StaticText *hexBox = nullptr;
     void drawColorBox(BitmapBuffer *dc);
     void drawFocusBox(BitmapBuffer *dc);
     void setRGB();

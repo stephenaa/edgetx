@@ -297,18 +297,35 @@ class ThemeDetailsDialog: public Dialog
 class ColorEditPage : public Page
 {
 public:
-  ColorEditPage(ThemeFile *theme, LcdColorIndex indexOfColor) :
+  ColorEditPage(ThemeFile theme, LcdColorIndex indexOfColor, 
+                std::function<void (ThemeFile *theme)> saveHandler = nullptr) :
     Page(ICON_RADIO_EDIT_THEME),
+    _saveHandler(std::move(saveHandler)),
     _indexOfColor(indexOfColor),
     _theme(theme)
   {
+    _originalColor = *theme.getColorEntryByIndex(_indexOfColor);
     buildBody(&body); // this must be called first
     buildHead(&header);
   }
 
+  void deleteLater(bool detach = true, bool trash = true) override
+  {
+    // restore the orignal color because we did not save
+    if (!bSaved) {
+      _theme.setColor(_indexOfColor, _originalColor.colorValue);
+      colorMaintainer.setColorList(_theme.getColorList());
+    }
+    Page::deleteLater();
+  }
+
+
 protected:
+  bool bSaved = false;
+  ColorEntry _originalColor;
+  std::function<void (ThemeFile *theme)> _saveHandler;
   LcdColorIndex _indexOfColor;
-  ThemeFile  *_theme;
+  ThemeFile  _theme;
   TextButton *saveButton;
   TextButton *cancelButton;
   ColorEditor *colorEditor;
@@ -318,11 +335,11 @@ protected:
   {
     rect_t r;
     r = { 0, 4, COLOR_LIST_WIDTH, COLOR_LIST_HEIGHT };
-    colorEditor = new ColorEditor(window, r,  _theme->getColorEntryByIndex(_indexOfColor)->colorValue,
+    colorEditor = new ColorEditor(window, r,  _theme.getColorEntryByIndex(_indexOfColor)->colorValue,
       [=](uint32_t rgb) {
-        _theme->setColor(_indexOfColor, rgb);
+        _theme.setColor(_indexOfColor, rgb);
         if (previewWindow != nullptr) {
-          colorMaintainer.setColorList(_theme->getColorList());
+          colorMaintainer.setColorList(_theme.getColorList());
           previewWindow->invalidate();
         }
       });
@@ -333,7 +350,7 @@ protected:
     else {
       r = { 0, LEFT_LIST_HEIGHT + 4,  LEFT_LIST_WIDTH, LEFT_LIST_HEIGHT - 4 };
     }
-    previewWindow = new PreviewWindow(window, r, _theme->getColorList());
+    previewWindow = new PreviewWindow(window, r, _theme.getColorList());
   }
 
   void buildHead(PageHeader* window)
@@ -356,6 +373,10 @@ protected:
     // save and cancel
     rect_t r = { LCD_W - (BUTTON_WIDTH + 5), 6, BUTTON_WIDTH, BUTTON_HEIGHT };
     saveButton = new TextButton(window, r, STR_SAVE, [=]() {
+      bSaved = true;
+      if (_saveHandler != nullptr) {
+        _saveHandler(&_theme);
+      }
       deleteLater();
       return 0;
       }, BUTTON_BACKGROUND | OPAQUE, textFont);
@@ -365,8 +386,6 @@ protected:
     window->link(saveButton, colorEditor);
   }
 };
-
-
 
 class ThemeEditPage : public Page
 {
@@ -427,17 +446,19 @@ class ThemeEditPage : public Page
     void buildBody(FormGroup *window)
     {
       rect_t r = { 0, 4, COLOR_LIST_WIDTH, COLOR_LIST_HEIGHT};
-      cList = new ColorList(window, r, _theme.getColorList(), 
-        [=] (uint32_t value) {
-          if (previewWindow) {
-            _theme.setColorByIndex(value, cList->getSelectedColor().colorValue);
+      cList = new ColorList(window, r, _theme.getColorList());
+      cList->setLongPressHandler([=] (event_t event) {
+        auto colorEntry = cList->getSelectedColor();
+        new ColorEditPage(_theme, colorEntry.colorNumber, 
+        [=] (ThemeFile *theme) {
+          if (previewWindow != nullptr && cList != nullptr) {
+            _theme.setColor(colorEntry.colorNumber, 
+                            theme->getColorEntryByIndex(colorEntry.colorNumber)->colorValue);
+            cList->setColorList(_theme.getColorList());
             colorMaintainer.setColorList(_theme.getColorList());
             previewWindow->invalidate();
           }
         });
-      cList->setLongPressHandler([=] (event_t event) {
-        auto colorEntry = cList->getSelectedColor();
-        new ColorEditPage(&_theme, colorEntry.colorNumber);
       });
 
       if (LCD_W > LCD_H) {
@@ -495,8 +516,7 @@ void ThemeSetupPage::build(FormWindow *window)
     auto menu = new Menu(window,false);
 
     // you cant edit the default theme
-    if (listBox->getSelected() != 0) {
-    menu->addLine(STR_ACTIVATE, [=] () {
+    menu->addLine(STR_ACTIVATE, [=]() {
       tp->applyTheme(listBox->getSelected());
       tp->setDefaultTheme(listBox->getSelected());
       nameText->setTextFlags(COLOR_THEME_PRIMARY1);
@@ -504,6 +524,7 @@ void ThemeSetupPage::build(FormWindow *window)
       nameLabel->setTextFlags(COLOR_THEME_PRIMARY1);
       authorLabel->setTextFlags(COLOR_THEME_PRIMARY1);
     });
+    if (listBox->getSelected() != 0) {
       menu->addLine(STR_EDIT,
         [=] () {
           auto theme = tp->getThemeByIndex(currentTheme);

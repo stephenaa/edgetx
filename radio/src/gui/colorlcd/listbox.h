@@ -32,8 +32,8 @@ class ListBase : public FormField
 {
   public:
     ListBase(Window *parent, const rect_t &rect, std::vector<std::string> names,
-              std::function<uint32_t()> getValue,
-              std::function<void(uint32_t)> setValue, 
+              std::function<uint32_t()> getValue = nullptr,
+              std::function<void(uint32_t)> setValue = nullptr, 
               uint8_t lineHeight = LINE_HEIGHT,
               WindowFlags windowFlags = 0, LcdFlags lcdFlags = 0);
     void paint (BitmapBuffer *dc) override;

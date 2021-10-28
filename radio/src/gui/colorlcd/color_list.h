@@ -32,7 +32,6 @@ class ColorList : public ListBase
 {
  public:
   ColorList(Window *parent, const rect_t &rect, std::vector<ColorEntry> colors,
-            std::function<void(uint32_t)> setValue,
             WindowFlags windowFlags = 0, LcdFlags lcdFlags = 0);
 
   inline ColorEntry getSelectedColor()

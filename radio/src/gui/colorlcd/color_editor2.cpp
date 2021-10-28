@@ -20,8 +20,11 @@
  */
 #include "color_editor2.h"
 
+constexpr int COLOR_BOX_TOP = 5;
+constexpr int COLOR_BOX_HEIGHT = 32;
+
 constexpr int BUTTON_LEFT = 3;
-constexpr int BUTTON_TOP = 80;
+constexpr int BUTTON_TOP = COLOR_BOX_TOP + COLOR_BOX_HEIGHT + 15;
 constexpr int BUTTON_HEIGHT = 20;
 constexpr int BUTTON_WIDTH = 50;
 constexpr int BUTTON_MARGIN = 4;
@@ -30,16 +33,18 @@ constexpr int BAR_LEFT = BUTTON_LEFT + BUTTON_WIDTH + BUTTON_MARGIN;
 constexpr int BAR_WIDTH = 20;
 constexpr int BAR_MARGIN = 2;
 
-constexpr int BAR_HEIGHT = MAX_HUE / 2;
-constexpr int BAR_TOP_MARGIN = 27;
+constexpr int BAR_HEIGHT = 160;
+constexpr int BAR_TOP_MARGIN = 50;
 
-constexpr int COLOR_BOX_TOP = BAR_TOP_MARGIN;
 constexpr int COLOR_BOX_WIDTH = BUTTON_WIDTH;
-constexpr int COLOR_BOX_HEIGHT = 32;
 constexpr int COLOR_BOX_LEFT = 3;
 
-HSVColorType::HSVColorType(FormGroup *window, uint32_t color) 
+const char *RGBChars[MAX_BARS] = { "R", "G", "B" };
+const char *HSVChars[MAX_BARS] = { "H", "S", "V" };
+
+HSVColorType::HSVColorType(FormGroup *window, uint32_t color)
 {
+  screenHeight = BAR_HEIGHT;
   auto r = GET_RED(color), g = GET_GREEN(color), b = GET_BLUE(color);
   float values[MAX_BARS];
   RGBtoHSV(r, g, b, values[0], values[1], values[2]);
@@ -50,16 +55,19 @@ HSVColorType::HSVColorType(FormGroup *window, uint32_t color)
     auto left = BAR_LEFT + ((BAR_WIDTH + BAR_MARGIN) * i);
     barInfo[i].leftPos = left;
     barInfo[i].maxValue = i == 0 ? MAX_HUE : MAX_BRIGHTNESS;
+    barInfo[i].invert = i != 0;
     barInfo[i].sliding = false;
     barInfo[i].value = values[i];
-    barInfo[i].barText = new StaticText(window, { left, BAR_TOP_MARGIN - 20, BAR_WIDTH, 16 },
-      std::to_string(barInfo[i].value), 0, COLOR_THEME_PRIMARY1 | CENTERED | FONT(XS));
+    barInfo[i].barText = 
+      new StaticText(window, { left, BAR_TOP_MARGIN - 20, BAR_WIDTH, 16 },
+                     std::to_string(barInfo[i].value), 
+                     0, COLOR_THEME_PRIMARY1 | CENTERED | FONT(XS));
   }
 }
 
 uint32_t HSVColorType::getBarValue(int bar, coord_t pos)
 {
-  int value = bar != 0 ? 100 - (((float)pos / BAR_HEIGHT) * 100) : pos * 2;
+  int value = screenToValue(bar, pos);
   value = max(value, 0);
   value = min(value, barInfo[bar].maxValue);
   return value;
@@ -70,65 +78,40 @@ uint32_t HSVColorType::getRGB()
   return HSVtoRGB(barInfo[0].value, barInfo[1].value, barInfo[2].value);
 }
 
-void HSVColorType::drawHueBar(BitmapBuffer* dc)
-{
-  for (int i = 0; i < MAX_HUE; i += 2) {
-    auto rgb = HSVtoRGB(i, MAX_SATURATION, MAX_BRIGHTNESS);
-    auto r = GET_RED(rgb);
-    auto g = GET_GREEN(rgb);
-    auto b = GET_BLUE(rgb);
-    dc->drawSolidHorizontalLine(barInfo[0].leftPos, BAR_TOP_MARGIN + i / 2, BAR_WIDTH, COLOR2FLAGS(RGB(r, g, b)));
-  }
-
-  dc->drawSolidRect(barInfo[0].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, MAX_HUE / 2, 1, COLOR2FLAGS(BLACK));
-  dc->drawFilledCircle(barInfo[0].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + barInfo[0].value / 2, 5, COLOR2FLAGS(WHITE));
-
-  dc->drawText(barInfo[0].leftPos + 3, BAR_TOP_MARGIN + MAX_HUE / 2 + 2, "H", COLOR_THEME_PRIMARY1 | FONT(XS));
-}
-
-void HSVColorType::drawBrightnessBar(BitmapBuffer* dc)
+void HSVColorType::drawBar(BitmapBuffer* dc, int bar, getRGBFromPos getRGB)
 {
   int maxRange = BAR_HEIGHT;
   for (auto i = 0; i < maxRange; i++) {
-    int brightness = (((float)i / maxRange) * 100);
-    auto rgb = HSVtoRGB(barInfo[0].value, 100, brightness);
+    auto rgb = getRGB(bar, i);
     auto r = GET_RED(rgb);
     auto g = GET_GREEN(rgb);
     auto b = GET_BLUE(rgb);
 
-    dc->drawSolidHorizontalLine(barInfo[2].leftPos, BAR_HEIGHT - i + BAR_TOP_MARGIN, BAR_WIDTH, COLOR2FLAGS(RGB(r, g, b)));
-    dc->drawSolidRect(barInfo[2].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, MAX_HUE / 2, 1, COLOR2FLAGS(BLACK));
+    dc->drawSolidHorizontalLine(barInfo[bar].leftPos, i + BAR_TOP_MARGIN, BAR_WIDTH, COLOR2FLAGS(RGB(r, g, b)));
   }
 
-  auto scalledValue = ((float)barInfo[2].value / 100) * maxRange;
-  dc->drawFilledCircle(barInfo[2].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + (maxRange - scalledValue), 5, COLOR2FLAGS(WHITE));
-  dc->drawText(barInfo[2].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, "B", COLOR_THEME_PRIMARY1 | FONT(XS));
-}
-
-void HSVColorType::drawSaturationBar(BitmapBuffer* dc)
-{
-  int maxRange = BAR_HEIGHT;
-  for (auto i = 0; i < maxRange; i++) {
-    int saturation = (((float)i / maxRange) * 100);
-    auto rgb = HSVtoRGB(barInfo[0].value, saturation, 50);
-    auto r = GET_RED(rgb);
-    auto g = GET_GREEN(rgb);
-    auto b = GET_BLUE(rgb);
-
-    dc->drawSolidHorizontalLine(barInfo[1].leftPos, BAR_HEIGHT - i + BAR_TOP_MARGIN, BAR_WIDTH, COLOR2FLAGS(RGB(r, g, b)));
-    dc->drawSolidRect(barInfo[1].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, MAX_HUE / 2, 1, COLOR2FLAGS(BLACK));
-  }
-
-  auto scalledValue = ((float)barInfo[1].value / 100) * maxRange;
-  dc->drawFilledCircle(barInfo[1].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + (maxRange - scalledValue), 5, COLOR2FLAGS(WHITE));
-  dc->drawText(barInfo[1].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, "S", COLOR_THEME_PRIMARY1 | FONT(XS));
+  dc->drawSolidRect(barInfo[bar].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, screenHeight, 1, COLOR2FLAGS(BLACK));
+  dc->drawFilledCircle(barInfo[bar].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + valueToScreen(bar, barInfo[bar].value), 5, COLOR2FLAGS(WHITE));
+  dc->drawText(barInfo[bar].leftPos + 3, BAR_TOP_MARGIN + screenHeight + 2, HSVChars[bar], COLOR_THEME_PRIMARY1 | FONT(XS));
 }
 
 void HSVColorType::paint(BitmapBuffer *dc)
 {
-  drawHueBar(dc);
-  drawSaturationBar(dc);
-  drawBrightnessBar(dc);
+  drawBar(dc, 0, [=] (int bar, int pos) {
+    int hue = screenToValue(0, pos);
+    auto rgb = HSVtoRGB(hue, MAX_SATURATION, MAX_BRIGHTNESS);
+    return rgb;
+  });
+  drawBar(dc, 1, [=] (int bar, int pos) {
+    int saturation = screenToValue(1, pos);
+    auto rgb = HSVtoRGB(barInfo[0].value, saturation, 50);
+    return rgb;
+  });
+  drawBar(dc, 2, [=] (int bar, int pos) {
+    int brightness = screenToValue(2, pos);
+    auto rgb = HSVtoRGB(barInfo[0].value, 100, brightness);
+    return rgb;
+  });
 }
 
 uint32_t RGBColorType::getBarValue(int bar, coord_t pos)
@@ -144,14 +127,12 @@ uint32_t RGBColorType::getRGB()
   return RGB(barInfo[0].value, barInfo[1].value, barInfo[2].value);
 }
 
-std::string RGBChars[3] = {"R", "G", "B"};
-
 void RGBColorType::paint(BitmapBuffer *dc)
 {
   int maxRange = BAR_HEIGHT;
   for (int i = 0; i < MAX_BARS; i++) {
     for (uint32_t j = 0; j < maxRange; j++) {
-      int value = (((float)j) / maxRange) * 255;
+      int value = (((float)j) / maxRange) * barInfo[i].maxValue;
       uint32_t color;
       if (i == 0)
         color = RGB(value, 0, 0);
@@ -160,18 +141,23 @@ void RGBColorType::paint(BitmapBuffer *dc)
       else
         color = RGB(0, 0, value);
 
-      dc->drawSolidHorizontalLine(barInfo[i].leftPos, j + BAR_TOP_MARGIN, BAR_WIDTH, COLOR2FLAGS(color));
-      dc->drawSolidRect(barInfo[i].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, maxRange, 1, COLOR2FLAGS(BLACK));
+      dc->drawSolidHorizontalLine(barInfo[i].leftPos, j + BAR_TOP_MARGIN, BAR_WIDTH, 
+                                  COLOR2FLAGS(color));
+      dc->drawSolidRect(barInfo[i].leftPos, BAR_TOP_MARGIN, BAR_WIDTH, maxRange, 1, 
+                        COLOR2FLAGS(BLACK));
     }
 
-    auto scalledValue = ((float)barInfo[i].value / 255) * maxRange;
-    dc->drawFilledCircle(barInfo[i].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + scalledValue, 5, COLOR2FLAGS(WHITE));
-    dc->drawText(barInfo[i].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, RGBChars[i].c_str(), COLOR_THEME_PRIMARY1 | FONT(XS));
+    auto scalledValue = ((float)barInfo[i].value / barInfo[i].maxValue) * maxRange;
+    dc->drawFilledCircle(barInfo[i].leftPos + (BAR_WIDTH / 2), BAR_TOP_MARGIN + scalledValue, 5, 
+                        COLOR2FLAGS(WHITE));
+    dc->drawText(barInfo[i].leftPos + 3, BAR_TOP_MARGIN + maxRange + 2, RGBChars[i], 
+                 COLOR_THEME_PRIMARY1 | FONT(XS));
   }
 }
 
 RGBColorType::RGBColorType(FormGroup *window, uint32_t color)
 {
+  screenHeight = BAR_HEIGHT;
   auto r = GET_RED(color), g = GET_GREEN(color), b = GET_BLUE(color);
   float values[MAX_BARS];
   values[0] = r; values[1] = g; values[2] = b;
@@ -187,36 +173,15 @@ RGBColorType::RGBColorType(FormGroup *window, uint32_t color)
   }
 }
 
-
-PalletColorType::PalletColorType(FormGroup *window, uint32_t color)
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+void setHexStr(StaticText* hexBox, uint32_t rgb)
 {
-  for (auto i = 0; i < MAX_BARS; i++) {
-    barInfo[i].barText = nullptr;
-  }
-}
-
-PalletColorType::~PalletColorType()
-{
-}
-
-void PalletColorType::paint(BitmapBuffer *dc)
-{
-  for (auto i = 0; i < 8; i++) {
-    for (auto j = 0; j < 15; j++) {
-      dc->drawSolidFilledRect(BAR_LEFT + (i * 11), BAR_TOP_MARGIN + (j * 11), 11, 11, COLOR2FLAGS(RGB(255,255,255)));
-      dc->drawSolidRect(BAR_LEFT + (i * 11), BAR_TOP_MARGIN + (j * 11), 11, 11, 1, COLOR2FLAGS(BLACK));
-    }
-  }
-}
-
-uint32_t PalletColorType::getRGB()
-{
-  return 0;
-}
-
-uint32_t PalletColorType::getBarValue(int bar, coord_t pos)
-{
-  return 0;
+  auto r = GET_RED(rgb), g = GET_GREEN(rgb), b = GET_BLUE(rgb);
+  char hexstr[80];
+  sprintf(hexstr, "%02X%02X%02X\n", r, g, b);
+  hexBox->setText(hexstr);
 }
 
 ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
@@ -225,9 +190,11 @@ ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
   _setValue(std::move(setValue)),
   _color(color)
 {
-
-  // colorType = new HSVColorType(this, _color);
   colorType = new HSVColorType(this, color);
+  
+  hexBox = new StaticText(this, { BAR_LEFT, COLOR_BOX_TOP, 80, 20 }, 
+                          "", 0, COLOR_THEME_PRIMARY1);
+  setHexStr(hexBox, _color);
 
   rect_t a = { BUTTON_LEFT, BUTTON_TOP, BUTTON_WIDTH, BUTTON_HEIGHT };
   firstButton = new TextButton(this, a, "HSV", 
@@ -240,7 +207,7 @@ ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
       return 0;
     }, 0, COLOR_THEME_PRIMARY1);
   a.y = a.y + BUTTON_HEIGHT + BUTTON_MARGIN;
-  new TextButton(this, a, "RGB", 
+  lastButton = new TextButton(this, a, "RGB", 
     [=] () {
       if (colorType != nullptr) {
         delete colorType;
@@ -249,20 +216,12 @@ ColorEditor::ColorEditor(FormGroup *window, const rect_t rect, uint32_t color,
       invalidate();
       return 0;
     }, 0, COLOR_THEME_PRIMARY1);
-  a.y = a.y + BUTTON_HEIGHT + BUTTON_MARGIN;
-  lastButton = new TextButton(this, a, "PAL", 
-    [=] () {
-      if (colorType != nullptr) {
-        delete colorType;
-      }
-      colorType = new PalletColorType(this, color);
-      return 0;
-    }, 0, COLOR_THEME_PRIMARY1);
 
   setFocusHandler([=](bool focus) {
     focused = focus;
   });
 
+  
   firstButton->setPreviousField(this);
   lastButton->setNextField(this);
   firstButton->setFocus();
@@ -276,6 +235,7 @@ void ColorEditor::setRGB()
       colorType->barInfo[i].barText->setText(std::to_string(colorType->barInfo[i].value));
     }
   }
+  setHexStr(hexBox, _color);
 
   invalidate();
   if (_setValue != nullptr)
@@ -295,6 +255,7 @@ bool ColorEditor::onTouchSlide(coord_t x, coord_t y, coord_t startX, coord_t sta
       y -= BAR_TOP_MARGIN;
       auto value = colorType->getBarValue(i, y);
       if (value != colorType->barInfo[i].value) {
+        slidingWindow = this;
         colorType->barInfo[i].value = value;    
         setRGB(); 
       } 

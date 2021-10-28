@@ -24,28 +24,13 @@
 
 ColorList::ColorList(
     Window *parent, const rect_t &rect, std::vector<ColorEntry> colors,
-    std::function<void(uint32_t value)> setValue,
     WindowFlags windowFlag, LcdFlags lcdFlags) :
-    ListBase(parent, rect, getColorListNames(colors), nullptr, setValue),
+    ListBase(parent, rect, getColorListNames(colors), nullptr, nullptr),
     colorList(colors),
     tp(ThemePersistance::instance())
 {
   setSelected(0);
-  // setLongPressHandler([=] (event_t event) {
-  //   createColorEditorPopup();
-  // });
   setEditMode(true);
-}
-
-void ColorList::createColorEditorPopup()
-{
-  new ColorEditor(static_cast<FormGroup *>(this->parent), this->rect, 
-    colorList[selected].colorValue, 
-    [=] (uint32_t rgb) {
-      colorList[selected].colorValue = rgb;
-      _setValue(selected);
-      invalidate();
-    });
 }
 
 std::vector<std::string> ColorList::getColorListNames(std::vector<ColorEntry> colors)
