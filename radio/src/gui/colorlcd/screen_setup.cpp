@@ -389,7 +389,7 @@ void ScreenUserInterfacePage::build(FormWindow * window)
   auto tp = ThemePersistance::instance();
   tp->refresh();
   std::vector<std::string> names = tp->getNames();
-  new Choice(window, grid.getFieldSlotEx(3, 0, 2), names, 0, names.size() - 1,
+  new Choice(window, grid.getFieldSlotEx(), names, 0, names.size() - 1,
     [=] () {
       return tp->getThemeIndex();
     }, 
@@ -413,7 +413,7 @@ void ScreenUserInterfacePage::build(FormWindow * window)
     return 0;
   };
 
-  new TextButton(window, grid.getFieldSlot(3, 2), STR_EDIT, launchEditor, BUTTON_BACKGROUND | OPAQUE, COLOR_THEME_PRIMARY2);
+  // new TextButton(window, grid.getFieldSlot(3, 2), STR_EDIT, launchEditor, BUTTON_BACKGROUND | OPAQUE, COLOR_THEME_PRIMARY2);
   
   bool bNarrowScreen = LCD_W < LCD_H;
   if (bNarrowScreen)
