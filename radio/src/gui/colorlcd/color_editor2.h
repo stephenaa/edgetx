@@ -35,8 +35,8 @@ class Bar
   public:
     bool sliding = false;
     int leftPos = 0;
-    int maxValue = 0;
-    int value = 0;
+    uint32_t maxValue = 0;
+    uint32_t value = 0;
     StaticText* barText = nullptr;
     bool invert = false;
 };
@@ -67,9 +67,9 @@ class ColorType
 
       return scaledValue;
     }
-    virtual int screenToValue(int bar, int pos)
+    virtual uint32_t screenToValue(int bar, int pos)
     {
-      int scaledValue = (((float)pos / screenHeight) * barInfo[bar].maxValue);
+      uint32_t scaledValue = (((float)pos / screenHeight) * barInfo[bar].maxValue);
       if (barInfo[bar].invert)
         scaledValue = barInfo[bar].maxValue - scaledValue;
       return scaledValue;

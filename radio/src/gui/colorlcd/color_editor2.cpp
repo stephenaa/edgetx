@@ -67,8 +67,8 @@ HSVColorType::HSVColorType(FormGroup *window, uint32_t color)
 
 uint32_t HSVColorType::getBarValue(int bar, coord_t pos)
 {
-  int value = screenToValue(bar, pos);
-  value = max(value, 0);
+  auto value = screenToValue(bar, pos);
+  value = max(value, (uint32_t)0);
   value = min(value, barInfo[bar].maxValue);
   return value;
 }
@@ -116,8 +116,8 @@ void HSVColorType::paint(BitmapBuffer *dc)
 
 uint32_t RGBColorType::getBarValue(int bar, coord_t pos)
 {
-  int value =((float)pos / BAR_HEIGHT) * barInfo[bar].maxValue;
-  value = max(value, 0);
+  uint32_t value = ((float)pos / BAR_HEIGHT) * barInfo[bar].maxValue;
+  value = max(value, (uint32_t)0);
   value = min(value, barInfo[bar].maxValue);
   return value;
 }
@@ -129,7 +129,7 @@ uint32_t RGBColorType::getRGB()
 
 void RGBColorType::paint(BitmapBuffer *dc)
 {
-  int maxRange = BAR_HEIGHT;
+  uint32_t maxRange = BAR_HEIGHT;
   for (int i = 0; i < MAX_BARS; i++) {
     for (uint32_t j = 0; j < maxRange; j++) {
       int value = (((float)j) / maxRange) * barInfo[i].maxValue;
@@ -324,7 +324,7 @@ void ColorEditor::onEvent(event_t event)
           auto bar = &colorType->barInfo[focusBar];
           bar->value += direction; 
           bar->value = min(bar->value, bar->maxValue);
-          bar->value = max(bar->value, 0);
+          bar->value = max(bar->value, (uint32_t)0);
           setRGB();
         }
         else if (focused) {
