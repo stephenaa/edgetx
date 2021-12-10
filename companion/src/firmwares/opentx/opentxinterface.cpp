@@ -749,6 +749,8 @@ int OpenTxFirmware::getCapability(::Capability capability)
       return getCapability(LcdWidth) > getCapability(LcdHeight) ? 4 : 2;
     case HasModelsList:
       return IS_FAMILY_HORUS_OR_T16(board);
+    case HasFlySkyGimbals:
+      return (IS_RADIOMASTER_TX16S(board) && id.contains("flyskygimbals"));
     default:
       return 0;
   }
@@ -970,6 +972,12 @@ EepromLoadErrors OpenTxEepromInterface::checkVersion(unsigned int version)
       // ALL: TimerData countdownStart invert value
       // ALL: convert more fields from zchar to normal string
       // COLORLCD: change CustomScreenData and TopBarPersistentData
+      return OLD_VERSION;
+
+    case 221:
+      // ALL: YAML storage
+      // X10PCB: add pots EXT3 and EXT4 (conversion required as shifts slider settings in multiple fields)
+      // RM TX16S: add Flysky gimbals firmware build option and repurpose EXT3 and EXT4 if selected
       break;
 
     default:
@@ -1401,6 +1409,7 @@ void registerOpenTxFirmwares()
   static const Firmware::Option opt_internal_gps("internalgps", Firmware::tr("Support internal GPS"));
   firmware->addOptionsGroup({opt_bt, opt_internal_gps});
   firmware->addOption("externalaccessmod", Firmware::tr("Support hardware mod: R9M ACCESS"));
+  firmware->addOption("flyskygimbals", Firmware::tr("Support hardware mod: FlySky Paladin EV Gimbals"));
   registerOpenTxFirmware(firmware);
 
   /* Jumper T18 board */
