@@ -294,7 +294,8 @@ class Firmware
       switchesLookupTable(Boards::getSwitchesLookupTable(board)),
       trimSwitchesLookupTable(Boards::getTrimSwitchesLookupTable(board)),
       rawSwitchTypesLookupTable(RawSwitch::getRawSwitchTypesLookupTable()),
-      rawSourceSpecialTypesLookupTable(RawSource::getSpecialTypesLookupTable())
+      rawSourceSpecialTypesLookupTable(RawSource::getSpecialTypesLookupTable()),
+      rawSourceCyclicLookupTable(RawSource::getCyclicLookupTable())
     {
     }
 
@@ -428,6 +429,11 @@ class Firmware
       return &rawSourceSpecialTypesLookupTable;
     }
 
+    const StringTagMappingTable* getRawSourceCyclicLookupTable()
+    {
+      return &rawSourceCyclicLookupTable;
+    }
+
     int getAnalogInputIndex(const char * tag);
     std::string getAnalogInputTag(unsigned int index);
     int getSwitchesIndex(const char * tag);
@@ -438,6 +444,8 @@ class Firmware
     std::string getRawSwitchTypesTag(unsigned int index);
     int getRawSourceSpecialTypesIndex(const char * tag);
     std::string getRawSourceSpecialTypesTag(unsigned int index);
+    int getRawSourceCyclicIndex(const char * tag);
+    std::string getRawSourceCyclicTag(unsigned int index);
 
   protected:
     QString id;
@@ -451,6 +459,7 @@ class Firmware
     const StringTagMappingTable trimSwitchesLookupTable;
     const StringTagMappingTable rawSwitchTypesLookupTable;
     const StringTagMappingTable rawSourceSpecialTypesLookupTable;
+    const StringTagMappingTable rawSourceCyclicLookupTable;
     QList<const char *> languages;
     //QList<const char *> ttslanguages;
     OptionsList opts;
