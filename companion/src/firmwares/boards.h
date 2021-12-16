@@ -212,6 +212,7 @@ class Boards
     static AbstractStaticItemModel * sliderTypeItemModel();
     static AbstractStaticItemModel * switchTypeItemModel();
     static StringTagMappingTable getTrimSwitchesLookupTable(Board::Type board);
+    static StringTagMappingTable getTrimSourcesLookupTable(Board::Type board);
 
   protected:
 
