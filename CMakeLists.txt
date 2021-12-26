@@ -68,6 +68,9 @@ message(STATUS "EdgeTX ${VERSION} @ ${GIT_STR}")
 
 # options shared by all targets
 
+# Build radio firmware? We want to seperate Companion/sim and the firmware so both buildsystems can be generated seperately
+option(BUILD_FIRMWARE "Build radio firmware" ON)
+
 option(APP_CUSTOM_DBG_HANDLER "Use custom message handler for debug output in all Qt apps." ON)
 set(APP_CUSTOM_DBG_LEVEL "0" CACHE STRING
   "Debug output level: 0=debug+; 1=info+; 2=warn+; 3=critical+; 4=fatal only.")
@@ -94,12 +97,12 @@ if(APPLE)
   set(SYSROOT_ARG -isysroot ${SDKROOT})
 endif()
 
-
 # Python check
-find_package(PythonInterp 3 REQUIRED)
-if(PYTHONINTERP_FOUND)
-  message(STATUS "Python found, version: ${PYTHON_VERSION_STRING}")
-  get_filename_component(PYTHON_DIRECTORY ${PYTHON_EXECUTABLE} DIRECTORY)
+find_package(Python3)
+
+if(Python3_FOUND)
+  message(STATUS "Python found, version: ${Python3_VERSION}")
+  get_filename_component(PYTHON_DIRECTORY ${Python3_EXECUTABLE} DIRECTORY)
 else()
   message(WARNING "Python not found! Most firmware and simu flavors not buildable.")
   set(LUA NO)
@@ -258,7 +261,9 @@ if(NOT GTEST_INCDIR OR NOT GTEST_SRCDIR)
   endif()
 endif()
 
-add_subdirectory(${RADIO_SRC_DIR})
+if(BUILD_FIRMWARE)
+  add_subdirectory(${RADIO_SRC_DIR})
+endif()
 
 add_custom_target(tests-radio
   COMMAND ${CMAKE_CURRENT_BINARY_DIR}/gtests-radio

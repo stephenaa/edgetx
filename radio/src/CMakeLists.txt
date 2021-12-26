@@ -1,3 +1,4 @@
+
 include(CMakeForceCompiler)
 include(Bitmaps)
 
@@ -66,13 +67,6 @@ set(FIRMWARE_CXX_FLAGS "" CACHE STRING "Additional flags for firmware target c++
 set(FIRMWARE_CXX_FLAGS_DEBUG "-g" CACHE STRING "Additional flags for firmware target (Debug config) c++ compiler (note: CMAKE_CXX_FLAGS_DEBUG is ignored for firmware/bootloader).")
 
 set(GCC_ARM_PATH "" CACHE STRING "Alternative GCC ARM path")
-
-set(FIRMWARE_C_COMPILER "${GCC_ARM_PATH}arm-none-eabi-gcc" CACHE STRING "Specific C compiler for firmware target.")
-set(FIRMWARE_CXX_COMPILER "${GCC_ARM_PATH}arm-none-eabi-g++" CACHE STRING "Specific C++ compiler for firmware target.")
-set(FIRMWARE_ASM_COMPILER "${GCC_ARM_PATH}arm-none-eabi-as" CACHE STRING "Specific assembler for firmware target.")
-set(FIRMWARE_OBJCOPY "${GCC_ARM_PATH}arm-none-eabi-objcopy" CACHE STRING "Specific objcopy for firmware target.")
-set(FIRMWARE_SIZE "${GCC_ARM_PATH}arm-none-eabi-size" CACHE STRING "Specific size for firmware target.")
-set(FIRMWARE_RANLIB "${GCC_ARM_PATH}arm-none-eabi-ranlib" CACHE STRING "Specific ranlib for firmware target.")
 
 set(THIRDPARTY_DIR thirdparty)
 set(LUA_DIR ${THIRDPARTY_DIR}/Lua/src)
@@ -568,10 +562,10 @@ if(NOT MSVC)
 
   if(ARCH STREQUAL ARM)
     enable_language(ASM)
-    set(CMAKE_C_COMPILER ${FIRMWARE_C_COMPILER})
-    set(CMAKE_CXX_COMPILER ${FIRMWARE_CXX_COMPILER})
-    set(CMAKE_ASM_COMPILER ${FIRMWARE_ASM_COMPILER})
-    set(CMAKE_RANLIB ${FIRMWARE_RANLIB})
+    #set(CMAKE_C_COMPILER ${FIRMWARE_C_COMPILER})
+    #set(CMAKE_CXX_COMPILER ${FIRMWARE_CXX_COMPILER})
+    #set(CMAKE_ASM_COMPILER ${FIRMWARE_ASM_COMPILER})
+    #set(CMAKE_RANLIB ${FIRMWARE_RANLIB})
 
     set(CMAKE_SYSTEM_NAME Generic)
     set(CMAKE_SYSTEM_VERSION 1)
@@ -639,7 +633,7 @@ if(NOT MSVC)
 
     add_custom_command(
       TARGET firmware POST_BUILD
-      COMMAND ${FIRMWARE_OBJCOPY} -O binary firmware.elf firmware.bin
+      COMMAND ${CMAKE_OBJCOPY} -O binary firmware.elf firmware.bin
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 
