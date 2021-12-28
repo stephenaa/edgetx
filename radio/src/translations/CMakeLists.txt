@@ -15,7 +15,7 @@ foreach(translation ${translations})
   if(Python3_FOUND)
     add_custom_command(
       OUTPUT ${target}
-      COMMAND ${Python3_EXECUTABLE} ${TOOLS_DIR}/encode-translation.py ${translation} ${target} ${language}
+      COMMAND ${Python3_EXECUTABLE} ${TOOLS_DIR}/encode-translation.py ${translation} ${target} ${language} ${bwlcd}
       DEPENDS ${translation} ${TOOLS_DIR}/encode-translation.py ${TOOLS_DIR}/charset.py
       )
   endif()
