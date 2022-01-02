@@ -1,3 +1,4 @@
+project(Firmware)
 cmake_minimum_required(VERSION 3.13)
 
 find_package(Python3)
@@ -10,6 +11,7 @@ set(RADIO_DIRECTORY ${MAIN_PROJECT_DIRECTORY}radio)
 
 include(Bitmaps)
 include(Macros)
+
 
 set(PCB_TYPES X9LITE X9LITES X7 XLITE XLITES X9D X9D+ X9E X10 X12S SKY9X 9XRPRO AR9X NV14)
 set(RADIO_LANGUAGES CZ DE EN ES FR IT PT SK SE PL HU NL CN TW)
@@ -47,7 +49,6 @@ if(SDL_FOUND)
 endif()
 option(LUA "Enable LUA support" ON)
 option(LUA_MIXER "Enable LUA mixer/model scripts support" OFF)
-option(BUILD_SIMU "Build simulator" OFF)
 option(SIMU_DISKIO "Enable disk IO simulation in simulator. Simulator will use FatFs module and simulated IO layer that  uses \"./sdcard.image\" file as image of SD card. This file must contain whole SD card from first to last sector" OFF)
 option(SIMU_LUA_COMPILER "Pre-compile and save Lua scripts in simulator." ON)
 option(FAS_PROTOTYPE "Support of old FAS prototypes (different resistors)" OFF)
@@ -522,9 +523,7 @@ else()
   endif(WARNINGS_AS_ERRORS)
 endif()
 
-if(BUILD_SIMU)
-  add_subdirectory(targets/simu)
-endif()
+add_subdirectory(targets/simu)
 
 if(NOT MSVC)
   add_subdirectory(tests)
@@ -570,7 +569,6 @@ use_cxx11()  # ensure gnu++11 in CXX_FLAGS with CMake < 3.1
 
 find_program(BASH bash HINTS "c:/cygwin/bin/" "c:/msys/bin/" DOC "bash shell for firmware size report (eg. c:/cygwin/bin/bash.exe on Windows).")
 
-if(BUILD_FIRMWARE)
 if(NOT MSVC)
   set(OPT "s" CACHE STRING "Optimization mode (0/1/2/s")
 
@@ -692,4 +690,3 @@ if(NOT MSVC)
   PrintTargetReport("firmware")
 
 endif(NOT MSVC)
-endif()
