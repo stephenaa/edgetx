@@ -46,7 +46,6 @@ set(CMAKE_COLOR_MAKEFILE ON)
 
 set(CMAKE_CXX_STANDARD 11)
 add_definitions(-D_GLIBCXX_USE_C99=1) # proper to_string definition
-
 set(RADIO_DIRECTORY ${PROJECT_SOURCE_DIR}/radio)
 set(RADIO_SRC_DIR ${RADIO_DIRECTORY}/src)
 set(COMPANION_SRC_DIRECTORY ${PROJECT_SOURCE_DIR}/companion/src)
@@ -62,6 +61,9 @@ now(TIME)
 git_id(GIT_STR)
 
 message(STATUS "EdgeTX ${VERSION} @ ${GIT_STR}")
+
+# Python check
+find_package(Python3)
 
 # options shared by all targets
 
@@ -94,9 +96,6 @@ if(APPLE)
   set(SYSROOT_ARG -isysroot ${SDKROOT})
 endif()
 
-# Python check
-find_package(Python3)
-
 if(Python3_FOUND)
   message(STATUS "Python found, version: ${Python3_VERSION}")
   get_filename_component(PYTHON_DIRECTORY ${Python3_EXECUTABLE} DIRECTORY)
@@ -120,13 +119,7 @@ if(APPLE AND EXISTS /usr/local/opt/qt5)
 	list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/qt5")
 endif()
 
-find_package(Qt5Core)
-find_package(Qt5Widgets)
-find_package(Qt5Xml)
-find_package(Qt5LinguistTools)
-find_package(Qt5PrintSupport)
-find_package(Qt5Multimedia)
-find_package(Qt5Svg)
+find_package(Qt5 COMPONENTS REQUIRED Core LinguistTools Multimedia PrintSupport Svg Widgets Xml)
 
 if(Qt5Core_FOUND)
   message(STATUS "Qt Version: ${Qt5Core_VERSION}")
@@ -258,37 +251,9 @@ if(NOT GTEST_INCDIR OR NOT GTEST_SRCDIR)
   endif()
 endif()
 
-if(NOT DEFINED TOOLCHAIN_LOCATION)
-  message("")
-  message("*************************************************************")
-  message("** You must specify toolchain location in TOOLCHAIN_LOCATION")
-  message("** Add -DTOOLCHAIN_LOCATION2=<path to toolchain>")
-  message("")
-  message(FATAL_ERROR "Missing argument!")
-endif()
-
 set(MAIN_PROJECT_DIRECTORY ${RADIO_SRC_DIR}/../../)
 if(BUILD_FIRMWARE)
-  include(ExternalProject)
-  ExternalProject_Add(
-   firmware
-   SOURCE_DIR ${RADIO_SRC_DIR}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/Firmware-build
-    CMAKE_ARGS -DPCB=${PCB} -DPCBREV=${PCBREV} 
-    CMAKE_CACHE_ARGS
-      -DTOOLCHAIN_LOCATION:STRING=${TOOLCHAIN_LOCATION}
-      #-DTOOLCHAIN_LOCATION:STRING=/Applications/gcc-arm-none-eabi-10-2021-q2-preview
-      -DVERSION:STRING=${VERSION}
-      -DVERSION_MAJOR:STRING=${VERSION_MAJOR}
-      -DVERSION_MINOR:STRING=${VERSION_MINOR}
-      -DVERSION_REVISION:STRING=${VERSION_REVISION}
-      -DRADIO_SRC_DIR:STRING=${RADIO_SRC_DIR}
-      -DCMAKE_TOOLCHAIN_FILE:STRING=../../cmake/arm-toolchain.cmake
-      -DMAIN_PROJECT_DIRECTORY:STRING=${MAIN_PROJECT_DIRECTORY}
-      -DCMAKE_MODULE_PATH:STRING=${MAIN_PROJECT_DIRECTORY}cmake
-    BUILD_COMMAND /usr/bin/make firmware
-    INSTALL_COMMAND ""
-  )
+  add_subdirectory(${RADIO_SRC_DIR})
 endif()
 
 add_custom_target(tests-radio
