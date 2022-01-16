@@ -409,7 +409,7 @@ def parse_field(ast,node):
             elif a['type'] == 'skip':
                 f.skip = True
 
-    if len(f.name) == 0:
+    if len(f.name) == 0:        
         print_error("in '{}', field of type '{}' does not have a name".format(ast.name,f.var_type))
 
     ast.append(f)
