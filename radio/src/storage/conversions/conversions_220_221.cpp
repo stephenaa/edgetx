@@ -67,7 +67,7 @@ static const char* convertData_220_to_221(
     output_fname[FF_MAX_LFN] = '\0';
     
     patchFilenameToYaml(output_fname);
-    error = writeFileYaml(output_fname, root_node, data);
+    error = writeFileYaml(output_fname, root_node, data, 0);
   }
 
   free(data);
